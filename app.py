@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, session, url_for, make_response
 import sqlite3, io
-from xhtml2pdf import pisa
+from weasyprint import HTML
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -272,8 +272,8 @@ def export_audit_logs():
         ORDER BY audit_logs.timestamp DESC
     ''', (institute,)).fetchall()
     conn.close()
-
-    output = StringIO()
+    import io
+    output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(['User', 'Action', 'Details', 'Timestamp'])
 
@@ -804,6 +804,8 @@ def patient_report(patient_id):
                            diagnosis=diagnosis, goals=goals, treatment=treatment)
 
 
+
+
 @app.route('/download_report/<patient_id>')
 @login_required()
 def download_report(patient_id):
@@ -816,10 +818,9 @@ def download_report(patient_id):
         conn.close()
         return "Patient not found."
 
-    if session.get('is_admin') == 0:
-        if patient['physio_id'] != session['user_id']:
-            conn.close()
-            return "Access denied."
+    if session.get('is_admin') == 0 and patient['physio_id'] != session['user_id']:
+        conn.close()
+        return "Access denied."
 
     # Fetch report sections
     subjective = conn.execute('SELECT * FROM subjective_examination WHERE patient_id = ?', (patient_id,)).fetchone()
@@ -833,15 +834,12 @@ def download_report(patient_id):
                                perspectives=perspectives, diagnosis=diagnosis,
                                treatment=treatment, goals=goals)
 
-    pdf = io.BytesIO()
-    pisa_status = pisa.CreatePDF(io.StringIO(rendered), dest=pdf)
+    pdf = HTML(string=rendered).write_pdf()
 
-    if pisa_status.err:
-        return "Error generating PDF"
-
-    response = make_response(pdf.getvalue())
+    response = make_response(pdf)
     response.headers['Content-Type'] = 'application/pdf'
     response.headers['Content-Disposition'] = f'attachment; filename={patient_id}_report.pdf'
+
     log_action(
         user_id=session['user_id'],
         action="Download Report",
