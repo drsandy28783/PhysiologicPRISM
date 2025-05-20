@@ -1,5 +1,5 @@
 Flask==2.2.5
-Werkzeug==2.2.5
+Werkzeug>=2.2,<2.4
 xhtml2pdf==0.2.5
 gunicorn
 
