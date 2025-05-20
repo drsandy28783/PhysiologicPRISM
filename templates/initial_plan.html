@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Initial Plan of Assessment - PRISM</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Initial Plan of Assessment for {{ patient_id }}</h2>
+        <form method="POST">
+
+            {% for section in [
+                ('active_movements', 'Active Movements'),
+                ('passive_movements', 'Passive Movements'),
+                ('passive_over_pressure', 'Passive Over Pressure'),
+                ('resisted_movements', 'Resisted Movements'),
+                ('combined_movements', 'Combined Movements'),
+                ('special_tests', 'Special Tests'),
+                ('neuro_dynamic_examination', 'Neurodynamic Examination')
+            ] %}
+
+            <div style="margin-bottom: 20px;">
+                <label><strong>{{ section[1] }}:</strong></label><br>
+                <select name="{{ section[0] }}" class="input-field" required>
+                    <option value="">Select</option>
+                    <option value="Mandatory assessment">Mandatory assessment</option>
+                    <option value="Assessment with precaution">Assessment with precaution</option>
+                    <option value="Absolutely Contraindicated">Absolutely Contraindicated</option>
+                </select><br>
+                <textarea name="{{ section[0] }}_details" class="input-field" rows="2" placeholder="Add relevant details if needed..."></textarea>
+            </div>
+
+            {% endfor %}
+
+            <button class="button" type="submit">Save & Continue to Pathophysiological Mechanism</button>
+        </form>
+    </div>
+</body>
+</html>

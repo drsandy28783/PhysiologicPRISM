@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Objective Assessment - PRISM</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="container">
+    <h2>Objective Assessment for {{ patient_id }}</h2>
+    <form method="POST">
+        <label for="plan">Plan:</label>
+        <select name="plan" id="plan" class="input-field" required>
+            <option value="">-- Select --</option>
+            <option value="Comprehensive without modification">Comprehensive without modification</option>
+            <option value="Comprehensive with modifications">Comprehensive with modifications</option>
+        </select><br><br>
+
+        <label for="plan_details">Assessment Notes / Modifications:</label>
+        <textarea name="plan_details" id="plan_details" class="input-field" rows="3" placeholder="Enter observations or modifications here..."></textarea><br><br>
+
+        <button class="button" type="submit">Save & Continue to Provisional Diagnosis</button>
+    </form>
+</div>
+</body>
+</html>

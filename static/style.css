@@ -1,0 +1,138 @@
+:root {
+  --dark-green: #12594C;
+  --mid-green: #20735B;
+  --shadow-green: #9BBFB5;
+  --mint: #4BA684;
+  --soft-white: #F2F2F2;
+}
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background-color: var(--soft-white);
+  color: var(--dark-green);
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  max-width: 600px;
+  margin: auto;
+  padding: 2rem;
+}
+
+.button {
+  background-color: var(--mint);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.input-field {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid var(--shadow-green);
+  border-radius: 4px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+th, td {
+  border: 1px solid var(--shadow-green);
+  padding: 10px;
+  text-align: left;
+}
+
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.form-group select {
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  max-width: 300px;
+}
+
+.full-width {
+  align-items: flex-start;
+}
+
+.filter-form .filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.data-table th,
+.data-table td {
+  border: 1px solid #ccc;
+  padding: 8px 12px;
+  text-align: center;
+}
+
+.small-button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 6px 10px;
+  margin: 2px;
+  text-decoration: none;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  display: inline-block;
+}
+
+.centered {
+  text-align: center;
+  margin-top: 20px;
+}
+.button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+
+.button-group .small-button {
+  white-space: nowrap;
+}
+.filter-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+}

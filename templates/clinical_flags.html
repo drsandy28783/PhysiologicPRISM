@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Clinical Flags - PRISM</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="container">
+    <h2>Clinical Flags for {{ patient_id }}</h2>
+    <form method="POST">
+
+      <label for="red_flag"><strong>Red Flag</strong> (Serious Pathology requiring further assessment or Medical/Surgical Intervention)</label>
+      <textarea class="input-field" name="red_flag" rows="2" placeholder="Describe if any red flags present..."></textarea>
+
+      <label for="orange_flag"><strong>Orange Flag</strong> (Symptoms S/O Psychiatric Illness)</label>
+      <textarea class="input-field" name="orange_flag" rows="2" placeholder="Describe if any orange flags present..."></textarea>
+
+      <label for="yellow_flag"><strong>Yellow Flag</strong> (Psychosocial Factors not fitting in Mental Illness Framework)</label>
+      <textarea class="input-field" name="yellow_flag" rows="2" placeholder="Describe if any yellow flags present..."></textarea>
+
+      <label for="black_flag"><strong>Black Flag</strong> (Nature of work/insurance/compensation related to workplace Injuries)</label>
+      <textarea class="input-field" name="black_flag" rows="2" placeholder="Describe if any black flags present..."></textarea>
+
+      <label for="blue_flag"><strong>Blue Flag</strong> (Perception about workplace in terms of support & stress which may include the likelihood of injury)</label>
+      <textarea class="input-field" name="blue_flag" rows="2" placeholder="Describe if any blue flags present..."></textarea>
+
+      <button class="button" type="submit">Save & Continue to Objective Assessment</button>
+    </form>
+  </div>
+</body>
+</html>

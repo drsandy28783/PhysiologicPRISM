@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Subjective Examination - PRISM</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Subjective Examination for {{ patient_id }}</h2>
+        <form method="POST">
+            <label>Impairment of body structure:</label>
+            <textarea class="input-field" name="body_structure" rows="2" required></textarea>
+
+            <label>Impairment of body function:</label>
+            <textarea class="input-field" name="body_function" rows="2" required></textarea>
+
+            <label>Activity Limitation / Participation / Restriction – Performance:</label>
+            <textarea class="input-field" name="activity_performance" rows="2" required></textarea>
+
+            <label>Activity Limitation / Participation / Restriction – Capacity:</label>
+            <textarea class="input-field" name="activity_capacity" rows="2" required></textarea>
+
+            <label>Contextual Factors – Environmental:</label>
+            <textarea class="input-field" name="contextual_environmental" rows="2" required></textarea>
+
+            <label>Contextual Factors – Personal:</label>
+            <textarea class="input-field" name="contextual_personal" rows="2" required></textarea>
+
+            <button class="button" type="submit">Save & Continue to Patient Perspectives</button>
+
+        </form>
+    </div>
+</body>
+</html>

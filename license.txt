@@ -1,0 +1,14 @@
+Copyright (c) 2025 Sandeep Rao
+
+All rights reserved.
+
+This software and associated documentation files (the "Software") are the intellectual property of the author and are protected by copyright law.
+
+Permission is hereby granted to use the Software for personal, educational, and non-commercial purposes only. 
+
+Commercial use, modification, redistribution, or reverse-engineering of the Software, in whole or in part, without express written permission from the author is strictly prohibited.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+
+Contact the author for licensing queries or commercial partnerships:
+Email: sandy_28783@rediffmail.com

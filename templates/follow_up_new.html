@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>New Follow-Up Session</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Add Follow-Up for {{ patient_id }}</h2>
+        <form method="POST">
+            <label>Session Number:</label>
+            <input type="text" name="session_number" class="input-field" required>
+
+            <label>Date:</label>
+            <input type="date" name="session_date" class="input-field" required>
+
+            <label>Grade of Achievement:</label>
+            <select name="grade" class="input-field" required>
+                <option value="">Select</option>
+                <option value="Not Achieved">Not Achieved</option>
+                <option value="Partially Achieved">Partially Achieved</option>
+                <option value="Fully Achieved">Fully Achieved</option>
+            </select>
+
+            <label>Perception of Treatment:</label>
+            <select name="belief_treatment" class="input-field">
+                <option value="">Select</option>
+                <option value="Very Effective">Very Effective</option>
+                <option value="Somewhat Effective">Somewhat Effective</option>
+                <option value="Not Effective">Not Effective</option>
+            </select>
+
+            <label>Feedback:</label>
+            <textarea name="belief_feedback" class="input-field" rows="3" placeholder="Enter feedback..."></textarea>
+
+            <label>Plan for Next Treatment:</label>
+            <textarea name="treatment_plan" class="input-field" rows="3" placeholder="Describe treatment strategy..."></textarea>
+
+            <button type="submit" class="button">Save Follow-Up</button>
+        </form>
+    </div>
+</body>
+</html>

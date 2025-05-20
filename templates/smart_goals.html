@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SMART Goals - PRISM</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>SMART Goals for {{ patient_id }}</h2>
+        <form method="POST">
+
+            <label for="patient_goal">Goals (Patient-Centric):</label>
+            <textarea name="patient_goal" id="patient_goal" class="input-field" rows="2" required></textarea>
+
+            <label for="baseline_status">Baseline Status:</label>
+            <textarea name="baseline_status" id="baseline_status" class="input-field" rows="2" required></textarea>
+
+            <label for="measurable_outcome">Measurable Outcomes Expected:</label>
+            <textarea name="measurable_outcome" id="measurable_outcome" class="input-field" rows="2" required></textarea>
+
+            <label for="time_duration">Time Duration:</label>
+            <textarea name="time_duration" id="time_duration" class="input-field" rows="2" required></textarea>
+
+            <button class="button" type="submit">Save & Continue to Treatment Plan</button>
+        </form>
+    </div>
+</body>
+</html>

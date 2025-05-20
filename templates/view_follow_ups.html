@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Follow-Up Log</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Follow-Up Log for {{ patient_id }}</h2>
+
+        {% if followups %}
+            <table>
+                <tr>
+                    <th>Session No.</th>
+                    <th>Date</th>
+                    <th>Grade</th>
+                    <th>Perception</th>
+                    <th>Feedback</th>
+                    <th>Plan</th>
+                </tr>
+                {% for f in followups %}
+                <tr>
+                    <td>{{ f['session_number'] }}</td>
+                    <td>{{ f['session_date'] }}</td>
+                    <td>{{ f['grade'] }}</td>
+                    <td>{{ f['belief_treatment'] }}</td>
+                    <td>{{ f['belief_feedback'] }}</td>
+                    <td>{{ f['treatment_plan'] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        {% else %}
+            <p>No follow-ups recorded for this patient yet.</p>
+        {% endif %}
+
+    <div style="margin-top: 30px;">
+        <a href="/dashboard"><button class="button back-button">Back to Dashboard</button></a>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Treatment Plan - PRISM</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Treatment Plan for {{ patient_id }}</h2>
+        <form method="POST">
+
+            <label for="treatment_plan">Treatment Plan:</label>
+            <textarea name="treatment_plan" id="treatment_plan" class="input-field" rows="2" required></textarea>
+
+            <label for="goal_targeted">Goal Targeted:</label>
+            <textarea name="goal_targeted" id="goal_targeted" class="input-field" rows="2" required></textarea>
+
+            <label for="reasoning">Reasoning:</label>
+            <textarea name="reasoning" id="reasoning" class="input-field" rows="2" required></textarea>
+
+            <label for="reference">Article / Book / Literature / Reference:</label>
+            <textarea name="reference" id="reference" class="input-field" rows="2" required></textarea>
+
+            <button class="button" type="submit">Save & Return to Dashboard</button>
+        </form>
+    </div>
+</body>
+</html>

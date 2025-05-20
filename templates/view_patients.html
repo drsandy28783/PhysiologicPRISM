@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>View Patients – PRISM</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Patient List</h2>
+
+        <!-- Filter Form -->
+        <form method="GET" class="filter-form">
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <label>Filter by Name:
+                    <input type="text" name="name" placeholder="Enter Name">
+                </label>
+                <label>Filter by Patient ID:
+                    <input type="text" name="patient_id" placeholder="Enter ID">
+                </label>
+                <button type="submit" class="button">Apply Filters</button>
+            </div>
+        </form>
+
+        <!-- Patients Table -->
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Patient Name</th>
+                    <th>Age/Sex</th>
+                    <th>Contact</th>
+                    <th>Date Added</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for patient in patients %}
+                <tr>
+                    <td>{{ patient.patient_id }}</td>
+                    <td>{{ patient.name }}</td>
+                    <td>{{ patient.age }}/{{ patient.sex }}</td>
+                    <td>{{ patient.contact }}</td>
+                    <td>{{ patient.created_at }}</td>
+                    <td style="display: flex; flex-direction: column; gap: 4px;">
+                        <a href="/edit_patient/{{ patient.patient_id }}"><button class="button">Edit</button></a>
+                        <a href="/follow_up_new/{{ patient.patient_id }}"><button class="button green">Add Follow-Up</button></a>
+                        <a href="/view_follow_ups/{{ patient.patient_id }}"><button class="button green">View Follow-Ups</button></a>
+                        <a href="{{ url_for('patient_report', patient_id=patient.patient_id) }}">
+                            <button class="button">Report</button>
+                        </a>
+                        <a href="{{ url_for('download_report', patient_id=patient.patient_id) }}">
+                            <button class="button">PDF</button>
+                        </a>
+
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <br>
+        <a href="/dashboard"><button class="button back-button">← Back to Dashboard</button></a>
+    </div>
+</body>
+</html>

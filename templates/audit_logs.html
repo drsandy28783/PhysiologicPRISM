@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Audit Log Viewer</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Audit Trail Logs</h2>
+        <a href="/export_audit_logs">
+          <button class="button">⬇️ Download CSV</button>
+        </a>
+        <br><br>
+
+        <table>
+            <tr>
+                <th>User</th>
+                <th>Action</th>
+                <th>Details</th>
+                <th>Timestamp</th>
+            </tr>
+            {% for log in logs %}
+            <tr>
+                <td>{{ log['name'] }}</td>
+                <td>{{ log['action'] }}</td>
+                <td>{{ log['details'] }}</td>
+                <td>{{ log['timestamp'] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        <br>
+        <a href="/admin_dashboard"><button class="button">Back to Admin Dashboard</button></a>
+    </div>
+</body>
+</html>

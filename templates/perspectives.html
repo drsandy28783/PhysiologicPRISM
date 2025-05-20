@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Patient Perspectives – PRISM</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="container">
+    <h2>Patient Perspectives for {{ patient_id }}</h2>
+    <form method="POST" class="form-grid">
+      <div class="form-group">
+        <label for="knowledge">Knowledge of the Illness:</label>
+        <select name="knowledge" id="knowledge" required>
+          <option value="">Select</option>
+          <option>Excellent</option>
+          <option>Good</option>
+          <option>Fair</option>
+          <option>Poor</option>
+          <option>None</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="attribution">Attribution:</label>
+        <select name="attribution" id="attribution" required>
+          <option value="">Select</option>
+          <option>Biomedical</option>
+          <option>Psychosocial</option>
+          <option>Behavioral</option>
+          <option>Environmental</option>
+          <option>Others</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="expectation">Expectation About Illness:</label>
+            <select name="illness_duration" id="illness_duration" required>
+
+          <option value="">Select</option>
+          <option>Short Term</option>
+          <option>Long Term</option>
+          <option>Unsure</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="consequences_awareness">Awareness of Consequences:</label>
+        <select name="consequences_awareness" id="consequences_awareness" required>
+          <option value="">Select</option>
+          <option>Fully Aware</option>
+          <option>Partially Aware</option>
+          <option>Unaware</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="locus_of_control">Locus of Control:</label>
+        <select name="locus_of_control" id="locus_of_control" required>
+          <option value="">Select</option>
+          <option>Internal</option>
+          <option>External</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="affective_aspect">Affective Aspect (Feelings Elicited):</label>
+        <select name="affective_aspect" id="affective_aspect" required>
+          <option value="">Select</option>
+          <option>Anxiety</option>
+          <option>Fear</option>
+          <option>Sadness</option>
+          <option>Anger</option>
+          <option>Frustration</option>
+          <option>Hopelessness</option>
+          <option>Acceptance</option>
+          <option>Others</option>
+        </select>
+      </div>
+
+      <div class="form-group full-width">
+        <button class="button" type="submit">Save & Continue to Initial Plan</button>
+      </div>
+    </form>
+
+</div>
+</body>
+</html>

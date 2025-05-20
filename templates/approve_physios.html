@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Approve Institute Physios - PRISM</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Pending Approval - Physiotherapists</h2>
+        {% if physios %}
+            <table>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Action</th>
+                </tr>
+                {% for physio in physios %}
+                <tr>
+                    <td>{{ physio['name'] }}</td>
+                    <td>{{ physio['email'] }}</td>
+                    <td>{{ physio['phone'] }}</td>
+                    <td>
+                        <a href="/approve_user/{{ physio['id'] }}">
+                            <button class="button">Approve</button>
+                            <form action="/reject_user/{{ physio['id'] }}" method="get" style="display:inline;">
+                                <button class="button" style="background-color: crimson;">Reject</button>
+                            </form>
+
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        {% else %}
+            <p>No physiotherapists pending approval.</p>
+        {% endif %}
+        <br>
+        <a href="/dashboard">Back to Dashboard</a>
+    </div>
+</body>
+</html>

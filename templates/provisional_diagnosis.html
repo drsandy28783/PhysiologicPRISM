@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Provisional Diagnosis - PRISM</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Provisional Diagnosis for {{ patient_id }}</h2>
+        <form method="POST">
+            <label for="likelihood">Likelihood of Diagnosis:</label>
+            <textarea name="likelihood" id="likelihood" class="input-field" rows="2" required></textarea>
+
+            <label for="structure_fault">Possible Structure at Fault:</label>
+            <textarea name="structure_fault" id="structure_fault" class="input-field" rows="2" required></textarea>
+
+            <label for="symptom">Symptom:</label>
+            <textarea name="symptom" id="symptom" class="input-field" rows="2" required></textarea>
+
+            <label for="findings_support">Findings Supporting the Diagnosis:</label>
+            <textarea name="findings_support" id="findings_support" class="input-field" rows="2" required></textarea>
+
+            <label for="findings_reject">Findings Rejecting the Diagnosis:</label>
+            <textarea name="findings_reject" id="findings_reject" class="input-field" rows="2" required></textarea>
+
+            <label for="hypothesis_supported">Hypothesis Supported?:</label>
+            <select name="hypothesis_supported" id="hypothesis_supported" class="input-field" required>
+                <option value="">Select</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+            </select>
+
+            <button class="button" type="submit">Save & Continue</button>
+        </form>
+    </div>
+</body>
+</html>

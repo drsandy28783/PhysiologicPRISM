@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pathophysiological Mechanism - PRISM</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .form-grid label {
+            font-weight: bold;
+        }
+        .full-width {
+            grid-column: span 2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Pathophysiological Mechanism for {{ patient_id }}</h2>
+        <form method="POST">
+            <div class="form-grid">
+
+                <label for="area_involved">Area Involved:</label>
+                <textarea name="area_involved" id="area_involved" rows="2"></textarea>
+
+                <label for="presenting_symptom">Presenting Symptom:</label>
+                <textarea name="presenting_symptom" id="presenting_symptom" rows="2"></textarea>
+
+                <label for="pain_type">Pain Type:</label>
+                <select name="pain_type" id="pain_type">
+                    <option value="">Select</option>
+                    <option>Pulling</option>
+                    <option>Sharp</option>
+                    <option>Dull</option>
+                    <option>Stabbing</option>
+                    <option>Radiating</option>
+                </select>
+
+                <label for="pain_nature">Pain Nature:</label>
+                <select name="pain_nature" id="pain_nature">
+                    <option value="">Select</option>
+                    <option>Constant/Continuous</option>
+                    <option>Intermittent</option>
+                    <option>Activity dependent</option>
+                </select>
+
+                <label for="pain_severity">Pain Severity / VAS:</label>
+                <input type="text" name="pain_severity" id="pain_severity">
+
+                <label for="pain_irritability">Pain Irritability:</label>
+                <select name="pain_irritability" id="pain_irritability">
+                    <option value="">Select</option>
+                    <option>Present</option>
+                    <option>Absent</option>
+                </select>
+
+                <label for="symptom_source">Possible Source of Symptoms:</label>
+                <select name="symptom_source" id="symptom_source">
+                    <option value="">Select</option>
+                    <option>Somatic Local</option>
+                    <option>Somatic Referred</option>
+                    <option>Neurogenic</option>
+                    <option>Visceral</option>
+                </select>
+
+                <label for="tissue_healing_stage">Stage of Tissue Healing:</label>
+                <select name="tissue_healing_stage" id="tissue_healing_stage">
+                    <option value="">Select</option>
+                    <option>Acute Inflammatory (0-72h)</option>
+                    <option>Subacute (4-21 days)</option>
+                    <option>Chronic (>3 weeks)</option>
+                </select>
+
+            </div>
+            <button class="button" type="submit">Save & Continue</button>
+        </form>
+    </div>
+</body>
+</html>

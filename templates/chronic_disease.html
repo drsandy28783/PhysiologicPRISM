@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chronic Disease Factors - PRISM</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Chronic Disease Factors for {{ patient_id }}</h2>
+        <form method="POST">
+            <div class="form-group">
+                <label for="cause">Cause for Maintenance of Symptoms:</label>
+                <select name="cause" id="cause" class="input-field" required>
+                    <option value="">-- Select --</option>
+                    <option>Physical/Biomechanical Issues</option>
+                    <option>Psychological Factors</option>
+                    <option>Social or Environmental Conditions</option>
+                    <option>Lifestyle / Behavioral</option>
+                    <option>Work-related</option>
+                    <option>Others</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="cause_detail">Specific Factors (Optional):</label>
+                <textarea name="cause_detail" id="cause_detail" class="input-field" rows="3" placeholder="Describe contributing factors (e.g. posture, stress, lack of activity)..."></textarea>
+            </div>
+
+            <button class="button" type="submit">Save & Continue to Clinical Flags</button>
+        </form>
+    </div>
+</body>
+</html>

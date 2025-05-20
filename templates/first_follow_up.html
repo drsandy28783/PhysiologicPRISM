@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>First Follow-Up - PRISM</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>First Follow-Up for {{ patient_id }}</h2>
+        <form method="POST">
+            <div class="form-group">
+                <label for="achievement">Grade of Achievement:</label>
+                <select name="achievement" id="achievement" class="input-field" required>
+                    <option value="">-- Select --</option>
+                    <option>Fully achieved</option>
+                    <option>Partially achieved</option>
+                    <option>Not achieved</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="perception">Patient Perception / Belief about Treatment Component:</label>
+                <select name="perception" id="perception" class="input-field" required>
+                    <option value="">-- Select --</option>
+                    <option>Helpful</option>
+                    <option>Not helpful</option>
+                    <option>Unclear</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="feedback">Patient Feedback:</label>
+                <textarea name="feedback" id="feedback" class="input-field" rows="3" placeholder="Enter feedback..." required></textarea>
+            </div>
+
+            <button class="button" type="submit">Save & Return to Dashboard</button>
+        </form>
+    </div>
+</body>
+</html>

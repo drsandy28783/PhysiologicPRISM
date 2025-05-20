@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manage Users</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Manage Institute Physiotherapists</h2>
+        <table>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+            {% for user in users %}
+            <tr>
+                <td>{{ user['name'] }}</td>
+                <td>{{ user['email'] }}</td>
+                <td>{{ user['phone'] }}</td>
+                <td>
+                    {% if user['is_active'] %}
+                        ✅ Active
+                    {% else %}
+                        ❌ Inactive
+                    {% endif %}
+                </td>
+                <td>
+                    {% if user['is_active'] %}
+                        <a href="/deactivate_user/{{ user['id'] }}">
+                            <button style="background-color: crimson;">Deactivate</button>
+                        </a>
+                    {% else %}
+                        <a href="/reactivate_user/{{ user['id'] }}">
+                            <button>Reactivate</button>
+                        </a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        <br>
+        <a href="/admin_dashboard"><button class="button">⬅ Back to Admin Dashboard</button></a>
+    </div>
+</body>
+</html>

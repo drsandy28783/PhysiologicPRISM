@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Institute Admin Dashboard - PRISM</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Welcome {{ name }} (Admin)</h2>
+        <p><strong>Institute:</strong> {{ institute }}</p>
+
+        <a href="/approve_physios">
+            <button class="button">Approve Pending Users</button>
+        </a>
+
+        <a href="/audit_logs">
+            <button class="button">View Audit Logs</button>
+        </a>
+
+        <a href="/dashboard">
+            <button class="button">Go to Main Dashboard</button>
+        </a>
+    </div>
+</body>
+</html>

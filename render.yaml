@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: physio-assist-backend
+    env: python
+    buildCommand: ""
+    startCommand: "gunicorn main:app"
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: PORT
+        value: 10000

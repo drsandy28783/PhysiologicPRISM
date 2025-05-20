@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Patient</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Edit Patient Details - {{ patient['patient_id'] }}</h2>
+
+        <form method="POST">
+            <label>Name:</label>
+            <input type="text" name="name" value="{{ patient['name'] }}" required><br>
+
+            <label>Age / Sex:</label>
+            <input type="text" name="age_sex" value="{{ patient['age_sex'] }}" required><br>
+
+            <label>Contact:</label>
+            <input type="text" name="contact" value="{{ patient['contact'] }}" required><br>
+
+            <button type="submit" class="button">Update Patient</button>
+            <a href="/dashboard"><button type="button" class="button">Cancel</button></a>
+        </form>
+    </div>
+</body>
+</html>
