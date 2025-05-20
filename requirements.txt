@@ -1,5 +1,5 @@
 Flask==2.2.5
-Werkzeug>=2.2,<2.4
+Werkzeug>=2.2,<2.3
 xhtml2pdf==0.2.5
-reportlab==3.5.67
+reportlab==3.6.12
 gunicorn
