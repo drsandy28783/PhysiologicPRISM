@@ -3,6 +3,8 @@ import sqlite3, io
 from weasyprint import HTML
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
+from notifications import send_push_notification
+from flask import request, jsonify
 
 def log_action(user_id, action, details=None):
     conn = get_db()
@@ -772,6 +774,22 @@ def first_follow_up(patient_id):
     conn.close()
     return render_template('first_follow_up.html', patient_id=patient_id)
 
+    @app.route('/update_push_token', methods=['POST'])
+@login_required(approved_only=False)
+def update_push_token():
+    token = request.json.get('token')
+
+    if not token:
+        return jsonify({"error": "No token provided"}), 400
+
+    conn = get_db()
+    conn.execute('UPDATE users SET push_token = ? WHERE id = ?', (token, session['user_id']))
+    conn.commit()
+    conn.close()
+
+    return jsonify({"message": "Push token saved successfully."}), 200
+
+
 @app.route('/patient_report/<patient_id>')
 @login_required()
 def patient_report(patient_id):
@@ -1059,6 +1077,20 @@ def view_follow_ups(patient_id):
     ''', (patient_id,)).fetchall()
     conn.close()
     return render_template('view_follow_ups.html', patient_id=patient_id, followups=followups)
+
+@app.route('/send-push', methods=['POST'])
+def send_push():
+    data = request.get_json()
+    token = data.get('token')
+    message = data.get('message')
+
+    if not token or not message:
+        return jsonify({"error": "Missing token or message"}), 400
+
+    response = send_push_notification(token, message)
+    return jsonify(response), 200
+
+
 
 
 if __name__ == '__main__':
