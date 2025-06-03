@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, session, url_for, make_response
 import sqlite3, io
-from weasyprint import HTML
+import pdfkit
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 from notifications import send_push_notification
@@ -774,7 +774,7 @@ def first_follow_up(patient_id):
     conn.close()
     return render_template('first_follow_up.html', patient_id=patient_id)
 
-    @app.route('/update_push_token', methods=['POST'])
+@app.route('/update_push_token', methods=['POST'])
 @login_required(approved_only=False)
 def update_push_token():
     token = request.json.get('token')
@@ -852,7 +852,10 @@ def download_report(patient_id):
                                perspectives=perspectives, diagnosis=diagnosis,
                                treatment=treatment, goals=goals)
 
-    pdf = HTML(string=rendered).write_pdf()
+   from weasyprint import HTML
+pdf = HTML(string=rendered).write_pdf()
+
+
 
     response = make_response(pdf)
     response.headers['Content-Type'] = 'application/pdf'
