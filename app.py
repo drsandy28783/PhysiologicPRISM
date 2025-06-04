@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, session, url_for, make_response
 import sqlite3, io
-import pdfkit
+from weasyprint import HTML
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 from notifications import send_push_notification
@@ -824,12 +824,17 @@ def patient_report(patient_id):
 
 
 
+from weasyprint import HTML
+from flask import make_response, session, render_template  # ensure these are imported
+
 @app.route('/download_report/<patient_id>')
 @login_required()
 def download_report(patient_id):
     conn = get_db()
 
-    patient = conn.execute('SELECT * FROM patients WHERE patient_id = ?', (patient_id,)).fetchone()
+    patient = conn.execute(
+        'SELECT * FROM patients WHERE patient_id = ?', (patient_id,)
+    ).fetchone()
 
     # Restrict access
     if not patient:
@@ -841,26 +846,47 @@ def download_report(patient_id):
         return "Access denied."
 
     # Fetch report sections
-    subjective = conn.execute('SELECT * FROM subjective_examination WHERE patient_id = ?', (patient_id,)).fetchone()
-    perspectives = conn.execute('SELECT * FROM patient_perspectives WHERE patient_id = ?', (patient_id,)).fetchone()
-    diagnosis = conn.execute('SELECT * FROM provisional_diagnosis WHERE patient_id = ?', (patient_id,)).fetchone()
-    treatment = conn.execute('SELECT * FROM treatment_plan WHERE patient_id = ?', (patient_id,)).fetchone()
-    goals = conn.execute('SELECT * FROM smart_goals WHERE patient_id = ?', (patient_id,)).fetchone()
+    subjective = conn.execute(
+        'SELECT * FROM subjective_examination WHERE patient_id = ?', (patient_id,)
+    ).fetchone()
+
+    perspectives = conn.execute(
+        'SELECT * FROM patient_perspectives WHERE patient_id = ?', (patient_id,)
+    ).fetchone()
+
+    diagnosis = conn.execute(
+        'SELECT * FROM provisional_diagnosis WHERE patient_id = ?', (patient_id,)
+    ).fetchone()
+
+    treatment = conn.execute(
+        'SELECT * FROM treatment_plan WHERE patient_id = ?', (patient_id,)
+    ).fetchone()
+
+    goals = conn.execute(
+        'SELECT * FROM smart_goals WHERE patient_id = ?', (patient_id,)
+    ).fetchone()
+
     conn.close()
 
-    rendered = render_template('patient_report.html', patient=patient, subjective=subjective,
-                               perspectives=perspectives, diagnosis=diagnosis,
-                               treatment=treatment, goals=goals)
+    # Render template and generate PDF
+    rendered = render_template(
+        'patient_report.html',
+        patient=patient,
+        subjective=subjective,
+        perspectives=perspectives,
+        diagnosis=diagnosis,
+        treatment=treatment,
+        goals=goals
+    )
 
-   from weasyprint import HTML
-pdf = HTML(string=rendered).write_pdf()
+    pdf = HTML(string=rendered).write_pdf()
 
-
-
+    # Create response with PDF
     response = make_response(pdf)
     response.headers['Content-Type'] = 'application/pdf'
     response.headers['Content-Disposition'] = f'attachment; filename={patient_id}_report.pdf'
 
+    # Log action
     log_action(
         user_id=session['user_id'],
         action="Download Report",
@@ -868,6 +894,7 @@ pdf = HTML(string=rendered).write_pdf()
     )
 
     return response
+
 
 @app.route('/register_with_institute', methods=['GET', 'POST'])
 def register_with_institute():
