@@ -1,4 +1,5 @@
-flask==2.2.5
-Werkzeug>=2.2,<2.4
-weasyprint==60.1
+Flask
 gunicorn
+pdfkit
+weasyprint
+httpx
