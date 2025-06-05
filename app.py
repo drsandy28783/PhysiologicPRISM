@@ -1121,6 +1121,37 @@ def send_push():
     return jsonify(response), 200
 
 
+@app.route('/api/patients', methods=['GET'])
+@login_required()
+def api_get_patients():
+    conn = get_db()
+    user_id = session['user_id']
+    is_admin = session.get('is_admin')
+    institute = session.get('institute')
+
+    if is_admin:
+        # Admin: all patients in their institute
+        patients = conn.execute('''
+            SELECT * FROM patients
+            WHERE physio_id IN (SELECT id FROM users WHERE institute = ?)
+        ''', (institute,)).fetchall()
+    else:
+        # Regular physio: only their patients
+        patients = conn.execute('''
+            SELECT * FROM patients WHERE physio_id = ?
+        ''', (user_id,)).fetchall()
+
+    conn.close()
+
+    return jsonify([
+        {
+            'patient_id': row['patient_id'],
+            'name': row['name'],
+            'age_sex': row['age_sex'],
+            'contact': row['contact']
+        }
+        for row in patients
+    ])
 
 
 if __name__ == '__main__':
