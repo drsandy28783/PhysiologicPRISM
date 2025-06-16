@@ -6,6 +6,29 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from notifications import send_push_notification
 from flask import request, jsonify
 
+from firebase_init import auth  # uses the initialized Firebase app
+
+from flask import request, jsonify
+from functools import wraps
+
+def firebase_token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth_header = request.headers.get('Authorization')
+        if not auth_header:
+            return jsonify({'error': 'Missing auth token'}), 401
+
+        try:
+            token = auth_header.split('Bearer ')[1]
+            decoded = auth.verify_id_token(token)
+            request.user = decoded  # attach user info to request
+        except Exception as e:
+            return jsonify({'error': 'Invalid or expired token', 'details': str(e)}), 403
+
+        return f(*args, **kwargs)
+    return decorated
+
+
 def log_action(user_id, action, details=None):
     conn = get_db()
     conn.execute(
@@ -1152,6 +1175,15 @@ def api_get_patients():
         }
         for row in patients
     ])
+
+@app.route('/firebase-secure', methods=['GET'])
+@firebase_token_required
+def firebase_secure():
+    user = request.user  # this is the Firebase user info
+    return jsonify({
+        'message': f"Hello {user['email']}, your UID is {user['uid']}",
+        'firebase_user': user
+    })
 
 
 if __name__ == '__main__':
