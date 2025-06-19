@@ -867,26 +867,31 @@ def follow_up_new(patient_id):
 @app.route('/view_follow_ups/<patient_id>')
 @login_required()
 def view_follow_ups(patient_id):
-    # Fetch patient
-    patients = db.collection('patients').where('patient_id', '==', patient_id).stream()
-    patient_doc = next(patients, None)
+    try:
+        patients = db.collection('patients').where('patient_id', '==', patient_id).stream()
+        patient_doc = next(patients, None)
 
-    if not patient_doc:
-        return "Patient not found."
+        if not patient_doc:
+            return "Patient not found."
 
-    patient = patient_doc.to_dict()
-    if session.get('is_admin') == 0 and patient.get('physio_id') != session['user_id']:
-        return "Access denied."
+        patient = patient_doc.to_dict()
+        if session.get('is_admin') == 0 and patient.get('physio_id') != session['user_id']:
+            return "Access denied."
 
-    # Fetch follow-ups
-    followups = db.collection('follow_ups') \
-                  .where('patient_id', '==', patient_id) \
-                  .order_by('session_date', direction=firestore.Query.DESCENDING) \
-                  .stream()
+        followups = db.collection('follow_ups') \
+                      .where('patient_id', '==', patient_id) \
+                      .order_by('session_date', direction=firestore.Query.DESCENDING) \
+                      .stream()
 
-    followup_list = [f.to_dict() for f in followups]
+        followup_list = [f.to_dict() for f in followups]
 
-    return render_template('view_follow_ups.html', patient_id=patient_id, followups=followup_list)
+        return render_template('view_follow_ups.html', patient_id=patient_id, followups=followup_list)
+
+    except Exception as e:
+        import traceback
+        print("🔴 Follow-up view error:", e)
+        traceback.print_exc()
+        return "Internal server error (view follow-ups)", 500
 
 
 @app.route('/patient_report/<patient_id>')
