@@ -928,46 +928,53 @@ def patient_report(patient_id):
 @app.route('/download_report/<patient_id>')
 @login_required()
 def download_report(patient_id):
-    # Fetch patient
-    patient_docs = db.collection('patients').where('patient_id', '==', patient_id).stream()
-    patient_doc = next(patient_docs, None)
+    try:
+        # Fetch patient and clinical data
+        patient_docs = db.collection('patients').where('patient_id', '==', patient_id).stream()
+        patient_doc = next(patient_docs, None)
 
-    if not patient_doc:
-        return "Patient not found."
+        if not patient_doc:
+            return "Patient not found."
 
-    patient = patient_doc.to_dict()
-    if session.get('is_admin') == 0 and patient['physio_id'] != session['user_id']:
-        return "Access denied."
+        patient = patient_doc.to_dict()
+        if session.get('is_admin') == 0 and patient['physio_id'] != session['user_id']:
+            return "Access denied."
 
-    def fetch_one(collection):
-        docs = db.collection(collection).where('patient_id', '==', patient_id).stream()
-        for d in docs:
-            return d.to_dict()
-        return None
+        def fetch_one(collection):
+            docs = db.collection(collection).where('patient_id', '==', patient_id).stream()
+            for d in docs:
+                return d.to_dict()
+            return None
 
-    rendered = render_template(
-        'patient_report.html',
-        patient=patient,
-        subjective=fetch_one('subjective_examination'),
-        perspectives=fetch_one('patient_perspectives'),
-        diagnosis=fetch_one('provisional_diagnosis'),
-        goals=fetch_one('smart_goals'),
-        treatment=fetch_one('treatment_plan')
-    )
+        rendered = render_template(
+            'patient_report.html',
+            patient=patient,
+            subjective=fetch_one('subjective_examination'),
+            perspectives=fetch_one('patient_perspectives'),
+            diagnosis=fetch_one('provisional_diagnosis'),
+            goals=fetch_one('smart_goals'),
+            treatment=fetch_one('treatment_plan')
+        )
 
-    from weasyprint import HTML
-    pdf = HTML(string=rendered).write_pdf()
+        from weasyprint import HTML
+        pdf = HTML(string=rendered).write_pdf()
 
-    log_action(
-        user_id=session['user_id'],
-        action="Download Report",
-        details=f"Downloaded PDF report for patient {patient_id}"
-    )
+        log_action(
+            user_id=session['user_id'],
+            action="Download Report",
+            details=f"Downloaded PDF report for patient {patient_id}"
+        )
 
-    response = make_response(pdf)
-    response.headers['Content-Type'] = 'application/pdf'
-    response.headers['Content-Disposition'] = f'attachment; filename={patient_id}_report.pdf'
-    return response
+        response = make_response(pdf)
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'attachment; filename={patient_id}_report.pdf'
+        return response
+
+    except Exception as e:
+        import traceback
+        print("🔴 PDF generation failed:", e)
+        traceback.print_exc()
+        return "Error generating report", 500
 
 
 
