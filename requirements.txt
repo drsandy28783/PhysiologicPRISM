@@ -1,5 +1,8 @@
 flask==2.2.5
 Werkzeug>=2.2,<2.4
-weasyprint>=59.0,<60.0
+weasyprint==59.0
+pydyf==0.8.0
+cffi>=1.15.1
+cairocffi>=1.4.0
 gunicorn==23.0.0
 firebase-admin==6.9.0
