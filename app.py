@@ -867,7 +867,6 @@ def follow_up_new(patient_id):
 @app.route('/view_follow_ups/<patient_id>')
 @login_required()
 def view_follow_ups(patient_id):
-    try:
         patients = db.collection('patients').where('patient_id', '==', patient_id).stream()
         patient_doc = next(patients, None)
 
@@ -887,12 +886,7 @@ def view_follow_ups(patient_id):
 
         return render_template('view_follow_ups.html', patient_id=patient_id, followups=followup_list)
 
-    except Exception as e:
-        import traceback
-        print("🔴 Follow-up view error:", e)
-        traceback.print_exc()
-        return "Internal server error (view follow-ups)", 500
-
+    
 
 @app.route('/patient_report/<patient_id>')
 @login_required()
@@ -928,7 +922,6 @@ def patient_report(patient_id):
 @app.route('/download_report/<patient_id>')
 @login_required()
 def download_report(patient_id):
-    try:
         # Fetch patient and clinical data
         patient_docs = db.collection('patients').where('patient_id', '==', patient_id).stream()
         patient_doc = next(patient_docs, None)
@@ -970,12 +963,7 @@ def download_report(patient_id):
         response.headers['Content-Disposition'] = f'attachment; filename={patient_id}_report.pdf'
         return response
 
-    except Exception as e:
-        import traceback
-        print("🔴 PDF generation failed:", e)
-        traceback.print_exc()
-        return "Error generating report", 500
-
+   
 
 
 
