@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, request, redirect, session, url_for, make_response
+from flask import Flask, render_template, request, redirect, session, url_for, make_response, jsonify
 import io, csv
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -153,18 +153,15 @@ def dashboard_data():
     if not user_id:
         return jsonify({"error": "user_id required"}), 400
 
-    # Get user name
-    user_docs = db.collection('users').where('user_id', '==', user_id).stream()
-    user_doc = next(user_docs, None)
+    user_doc = db.collection('users').document(user_id).get()
 
-    if not user_doc:
+    if not user_doc.exists:
         return jsonify({"error": "User not found"}), 404
 
     user = user_doc.to_dict()
     name = user.get('name')
     is_admin = user.get('is_admin', 0)
 
-    # Get all patients created by this physio
     patients = db.collection('patients').where('physio_id', '==', user_id).stream()
     patient_list = [p.to_dict() for p in patients]
 
@@ -173,6 +170,7 @@ def dashboard_data():
         "is_admin": is_admin,
         "patients": patient_list
     })
+
 
 
 @app.route('/view_patients')
