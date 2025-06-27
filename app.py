@@ -22,7 +22,8 @@ def log_action(user_id, action, details=None):
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'fallback_default')
 CORS(app)  # Enable CORS for mobile app
-claude_client = anthropic.Anthropic(api_key=os.environ.get('CLAUDE_API_KEY'))
+c# claude_client = anthropic.Anthropic(api_key=os.environ.get('CLAUDE_API_KEY'))
+claude_client = None  # Temporarily disabled for deployment
 
 
 def login_required(approved_only=True):
@@ -1133,6 +1134,9 @@ def api_get_patients():
 @mobile_auth_required
 def api_test_ai():
     try:
+        if claude_client is None:
+            return jsonify({'ai_response': 'AI temporarily disabled - will enable after successful deployment'})
+        
         response = claude_client.messages.create(
             model="claude-3-sonnet-20240229",
             max_tokens=100,
