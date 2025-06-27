@@ -1585,5 +1585,306 @@ def api_icf_templates():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# Add these routes to your existing Flask app
+
+@app.route('/api/ai/perspectives-guidance', methods=['POST'])
+def get_perspectives_guidance():
+    """Provide guidance for patient perspectives assessment fields"""
+    try:
+        data = request.get_json()
+        field_name = data.get('field_name')
+        
+        # Psychology-informed guidance for each field
+        guidance_map = {
+            'knowledge': {
+                'title': 'Assessing Patient Knowledge',
+                'content': 'Explore what the patient understands about their condition. Ask open-ended questions like "What do you think is happening with your [body part]?" or "How would you explain your condition to a friend?" Look for misconceptions, gaps in understanding, or catastrophic thinking patterns.',
+                'questions': [
+                    'What has been explained to you about your condition?',
+                    'How would you describe what\'s happening in your own words?',
+                    'What concerns you most about your diagnosis?',
+                    'Where did you get most of your information about this condition?'
+                ]
+            },
+            'attribution': {
+                'title': 'Understanding Causal Beliefs',
+                'content': 'Explore what the patient believes caused their problem. This affects their engagement with treatment. Look for self-blame, external attributions, or unrealistic causal beliefs that might impact recovery.',
+                'questions': [
+                    'What do you think caused your problem?',
+                    'Was there a specific incident or did it develop gradually?',
+                    'Do you feel this was something you could have prevented?',
+                    'How much control do you feel you had over developing this condition?'
+                ]
+            },
+            'illness_duration': {
+                'title': 'Recovery Timeline Expectations',
+                'content': 'Understand patient expectations about recovery time. Unrealistic expectations (too fast or too slow) can affect treatment adherence and outcomes. Help align expectations with evidence-based timelines.',
+                'questions': [
+                    'How long do you expect it will take to get better?',
+                    'What\'s your goal timeline for returning to normal activities?',
+                    'Have you had similar problems before? How long did they take to resolve?',
+                    'What would be acceptable progress for you in the next month?'
+                ]
+            },
+            'consequences_awareness': {
+                'title': 'Impact and Implications Understanding',
+                'content': 'Assess how well the patient understands the potential consequences of their condition. This includes functional, social, work, and emotional impacts. Look for catastrophizing or minimizing behaviors.',
+                'questions': [
+                    'How is this condition affecting your daily life?',
+                    'What activities are you most concerned about not being able to do?',
+                    'How is this impacting your work/family/social life?',
+                    'What worries you most about the future with this condition?'
+                ]
+            },
+            'locus_of_control': {
+                'title': 'Control Beliefs Assessment',
+                'content': 'Determine whether the patient has internal (they can influence outcomes) or external (outcomes depend on others/fate) locus of control. Internal locus generally predicts better outcomes and engagement.',
+                'questions': [
+                    'How much control do you feel you have over your recovery?',
+                    'What role do you think you play in getting better?',
+                    'How much do you think your actions affect your symptoms?',
+                    'Who or what do you think will be most important in your recovery?'
+                ]
+            },
+            'affective_aspect': {
+                'title': 'Emotional Response Assessment',
+                'content': 'Explore the emotional impact of the condition. Look for signs of anxiety, depression, frustration, or fear. These emotions significantly impact recovery and may require additional support.',
+                'questions': [
+                    'How are you feeling emotionally about this condition?',
+                    'What emotions come up when you think about your problem?',
+                    'Are you feeling anxious or worried about anything specific?',
+                    'How is this affecting your mood day-to-day?'
+                ]
+            }
+        }
+        
+        guidance = guidance_map.get(field_name, {
+            'title': 'General Perspectives Guidance',
+            'content': 'Assess patient beliefs, understanding, and emotional responses to their condition.',
+            'questions': ['How do you feel about your current situation?']
+        })
+        
+        return jsonify({
+            'success': True,
+            'guidance': guidance
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/ai/perspectives-prompts', methods=['POST'])
+def get_perspectives_clinical_prompts():
+    """Generate clinical reasoning prompts for patient perspectives"""
+    try:
+        data = request.get_json()
+        current_responses = data.get('responses', {})
+        
+        # Generate psychology-focused clinical reasoning prompts
+        prompts = []
+        
+        # Knowledge assessment prompts
+        if current_responses.get('knowledge'):
+            prompts.append({
+                'category': 'Knowledge Assessment',
+                'prompt': 'Based on the patient\'s understanding, are there any misconceptions that need addressing? How might their current knowledge level affect treatment compliance?'
+            })
+        
+        # Attribution analysis
+        if current_responses.get('attribution'):
+            prompts.append({
+                'category': 'Causal Beliefs',
+                'prompt': 'Does the patient\'s belief about causation suggest self-blame or external attribution? How might this impact their engagement with self-management strategies?'
+            })
+        
+        # Timeline expectations
+        if current_responses.get('illness_duration'):
+            prompts.append({
+                'category': 'Recovery Expectations',
+                'prompt': 'Are the patient\'s timeline expectations realistic? Do they suggest impatience that might lead to treatment dropout or despair that might reduce effort?'
+            })
+        
+        # Consequences awareness
+        if current_responses.get('consequences_awareness'):
+            prompts.append({
+                'category': 'Impact Understanding',
+                'prompt': 'Is the patient catastrophizing or minimizing their condition? How well do they understand the broader implications beyond just physical symptoms?'
+            })
+        
+        # Control beliefs
+        if current_responses.get('locus_of_control'):
+            prompts.append({
+                'category': 'Control Assessment',
+                'prompt': 'Does the patient demonstrate internal or external locus of control? How might this affect their willingness to engage in active treatment strategies?'
+            })
+        
+        # Emotional response
+        if current_responses.get('affective_aspect'):
+            prompts.append({
+                'category': 'Emotional Impact',
+                'prompt': 'Are there signs of significant emotional distress that might require additional support? How might their emotional state impact their recovery?'
+            })
+        
+        # Overall integration prompts
+        prompts.extend([
+            {
+                'category': 'Therapeutic Relationship',
+                'prompt': 'Based on these perspectives, how should you adapt your communication style and treatment approach to best engage this patient?'
+            },
+            {
+                'category': 'Psychosocial Factors',
+                'prompt': 'What psychosocial factors emerge as potential barriers or facilitators to recovery? What additional support might be beneficial?'
+            },
+            {
+                'category': 'Patient-Centered Care',
+                'prompt': 'How can you incorporate the patient\'s beliefs and concerns into a collaborative treatment plan that respects their perspective while promoting evidence-based care?'
+            }
+        ])
+        
+        return jsonify({
+            'success': True,
+            'prompts': prompts
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/ai/perspectives-patterns', methods=['POST'])
+def analyze_perspectives_patterns():
+    """Analyze patterns in patient perspectives for clinical insights"""
+    try:
+        data = request.get_json()
+        responses = data.get('responses', {})
+        
+        patterns = []
+        
+        # Analyze for concerning patterns
+        knowledge = responses.get('knowledge', '').lower()
+        attribution = responses.get('attribution', '').lower()
+        consequences = responses.get('consequences_awareness', '').lower()
+        control = responses.get('locus_of_control', '').lower()
+        emotion = responses.get('affective_aspect', '').lower()
+        
+        # Check for catastrophic thinking
+        catastrophic_terms = ['terrible', 'awful', 'disaster', 'ruined', 'never', 'always', 'worst', 'hopeless']
+        if any(term in knowledge + consequences + emotion for term in catastrophic_terms):
+            patterns.append({
+                'type': 'warning',
+                'category': 'Catastrophic Thinking',
+                'message': 'Patient may be exhibiting catastrophic thinking patterns. Consider cognitive restructuring techniques and realistic expectation setting.',
+                'recommendation': 'Address unrealistic negative thoughts with evidence-based information and gradual exposure to positive outcomes.'
+            })
+        
+        # Check for external locus of control
+        external_terms = ['doctor will fix', 'nothing I can do', 'up to you', 'fate', 'bad luck']
+        if any(term in control + attribution for term in external_terms):
+            patterns.append({
+                'type': 'info',
+                'category': 'External Control Beliefs',
+                'message': 'Patient appears to have external locus of control. This may impact engagement with self-management.',
+                'recommendation': 'Emphasize patient agency and provide clear examples of how their actions directly impact outcomes.'
+            })
+        
+        # Check for depression/anxiety indicators
+        mood_concerns = ['depressed', 'anxious', 'scared', 'worried', 'hopeless', 'frustrated', 'angry']
+        if any(term in emotion for term in mood_concerns):
+            patterns.append({
+                'type': 'warning',
+                'category': 'Emotional Distress',
+                'message': 'Patient reports emotional distress that may impact recovery. Consider psychological support.',
+                'recommendation': 'Monitor emotional wellbeing closely and consider referral to mental health services if appropriate.'
+            })
+        
+        # Check for unrealistic recovery expectations
+        duration = responses.get('illness_duration', '').lower()
+        if any(term in duration for term in ['immediately', 'right away', 'few days', 'week']):
+            patterns.append({
+                'type': 'info',
+                'category': 'Unrealistic Timeline',
+                'message': 'Patient may have unrealistic expectations about recovery timeline.',
+                'recommendation': 'Provide evidence-based timeline information and set realistic milestones.'
+            })
+        
+        # Positive patterns
+        positive_terms = ['understand', 'willing', 'committed', 'optimistic', 'confident']
+        if any(term in knowledge + control for term in positive_terms):
+            patterns.append({
+                'type': 'success',
+                'category': 'Positive Engagement',
+                'message': 'Patient demonstrates good understanding and positive engagement indicators.',
+                'recommendation': 'Build on this positive foundation with collaborative goal setting.'
+            })
+        
+        return jsonify({
+            'success': True,
+            'patterns': patterns
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/ai/enhance-perspectives-text', methods=['POST'])
+def enhance_perspectives_text():
+    """Enhance patient perspectives documentation with professional language"""
+    try:
+        data = request.get_json()
+        text = data.get('text', '')
+        field_name = data.get('field_name', '')
+        
+        if not text.strip():
+            return jsonify({'success': False, 'error': 'No text provided'})
+        
+        # Field-specific enhancement prompts
+        enhancement_prompts = {
+            'knowledge': 'Rewrite this patient knowledge assessment using professional clinical language while preserving the patient\'s actual understanding and misconceptions',
+            'attribution': 'Enhance this documentation of patient causal beliefs using appropriate psychological and clinical terminology',
+            'illness_duration': 'Improve this documentation of patient recovery expectations using professional language that captures timeline beliefs',
+            'consequences_awareness': 'Rewrite this assessment of patient impact awareness using clinical terminology for functional and psychosocial consequences',
+            'locus_of_control': 'Enhance this documentation of patient control beliefs using appropriate psychological terminology',
+            'affective_aspect': 'Improve this emotional response documentation using professional mental health and clinical language'
+        }
+        
+        prompt = enhancement_prompts.get(field_name, 'Enhance this patient perspectives documentation using professional clinical language')
+        
+        # Call Claude API for text enhancement
+        headers = {
+            'Content-Type': 'application/json',
+            'X-API-Key': os.environ.get('CLAUDE_API_KEY')
+        }
+        
+        claude_payload = {
+            'model': 'claude-3-sonnet-20240229',
+            'max_tokens': 300,
+            'messages': [{
+                'role': 'user',
+                'content': f'''{prompt}: "{text}"
+
+Requirements:
+- Use professional clinical and psychological terminology
+- Maintain the patient's actual perspective and beliefs
+- Be concise but comprehensive
+- Include relevant psychological constructs when appropriate
+- Preserve important details while improving clarity'''
+            }]
+        }
+        
+        response = requests.post(
+            'https://api.anthropic.com/v1/messages',
+            headers=headers,
+            json=claude_payload,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            enhanced_text = response.json()['content'][0]['text'].strip()
+            return jsonify({
+                'success': True,
+                'enhanced_text': enhanced_text
+            })
+        else:
+            return jsonify({'success': False, 'error': 'AI service unavailable'}), 503
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True)
