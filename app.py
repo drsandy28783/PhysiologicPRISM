@@ -9,7 +9,7 @@ db = firestore.client()
 from flask_cors import CORS
 import jwt
 from datetime import datetime, timedelta
-import anthropic
+#import anthropic
 
 def log_action(user_id, action, details=None):
     db.collection('audit_logs').add({
