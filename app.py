@@ -2674,6 +2674,630 @@ def api_chronic_intervention_planning():
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+
+    # Add ALL these endpoints to your app.py file after your existing AI endpoints
+
+# =============================================================================
+# CLINICAL FLAGS AI ENDPOINTS
+# =============================================================================
+
+@app.route('/api/ai/clinical-flags-guidance', methods=['POST'])
+@mobile_auth_required
+def api_clinical_flags_guidance():
+    try:
+        data = request.get_json()
+        flag_type = data.get('flag_type')  # red_flag, orange_flag, etc.
+        
+        flag_guidance = {
+            'red_flag': """Provide expert guidance on Red Flags for serious pathology requiring medical/surgical intervention.
+            
+            Red flag assessment guidance:
+            - Neurological signs (cauda equina, spinal cord compression)
+            - Cancer indicators (night pain, unexplained weight loss, previous cancer)
+            - Infection signs (fever, systemically unwell, hot swollen joint)
+            - Fracture risk (significant trauma, osteoporosis, age factors)
+            - Vascular issues (claudication, acute ischemia)
+            - Inflammatory conditions (morning stiffness, systemic symptoms)
+            
+            Format as systematic red flag screening checklist.""",
+            
+            'orange_flag': """Provide expert guidance on Orange Flags for psychiatric illness symptoms.
+            
+            Orange flag assessment guidance:
+            - Depression and mood disorders
+            - Anxiety and panic disorders
+            - Substance abuse issues
+            - Psychotic symptoms
+            - Severe personality disorders
+            - Suicidal ideation or self-harm
+            
+            Format as mental health screening considerations.""",
+            
+            'yellow_flag': """Provide expert guidance on Yellow Flags for psychosocial factors.
+            
+            Yellow flag assessment guidance:
+            - Fear-avoidance behaviors and kinesiophobia
+            - Catastrophic thinking patterns
+            - Poor coping strategies
+            - Passive treatment expectations
+            - Social withdrawal and isolation
+            - Belief that pain equals harm
+            
+            Format as psychosocial risk factor assessment.""",
+            
+            'black_flag': """Provide expert guidance on Black Flags for work/insurance/compensation issues.
+            
+            Black flag assessment guidance:
+            - Compensation claim involvement
+            - Workplace injury disputes
+            - Insurance claim complications
+            - Legal proceedings related to injury
+            - Financial stress and job insecurity
+            - Return-to-work barriers
+            
+            Format as occupational and medicolegal factor assessment.""",
+            
+            'blue_flag': """Provide expert guidance on Blue Flags for workplace support and stress factors.
+            
+            Blue flag assessment guidance:
+            - Workplace support systems
+            - Job satisfaction and engagement
+            - Ergonomic factors and workplace design
+            - Management and colleague relationships
+            - Workload and time pressures
+            - Organizational culture and stress levels
+            
+            Format as workplace environment assessment."""
+        }
+        
+        prompt = flag_guidance.get(flag_type, 'Provide general clinical flags assessment guidance.')
+        
+        response = claude_client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=400,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({
+            'success': True,
+            'guidance': response.content[0].text,
+            'flag_type': flag_type
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/ai/flags-analysis', methods=['POST'])
+@mobile_auth_required
+def api_flags_analysis():
+    try:
+        data = request.get_json()
+        flags_data = data.get('flags_data', {})
+        
+        analysis_text = "Clinical flags assessment for risk stratification:\n\n"
+        for flag, content in flags_data.items():
+            if content and content.strip():
+                analysis_text += f"{flag.replace('_', ' ').title()}: Present\n"
+        
+        prompt = f"""Analyze clinical flags for risk stratification in physiotherapy.
+
+        {analysis_text}
+        
+        Provide analysis focusing on:
+        1. Overall risk level and prognosis
+        2. Priority flags requiring immediate attention
+        3. Interdisciplinary referral needs
+        4. Treatment approach modifications
+        5. Monitoring and safety considerations
+        
+        Format as structured risk analysis with recommendations."""
+        
+        response = claude_client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=500,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({
+            'success': True,
+            'analysis': response.content[0].text
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# =============================================================================
+# OBJECTIVE ASSESSMENT AI ENDPOINTS
+# =============================================================================
+
+@app.route('/api/ai/objective-guidance', methods=['POST'])
+@mobile_auth_required
+def api_objective_guidance():
+    try:
+        data = request.get_json()
+        plan_type = data.get('plan_type', 'general')
+        
+        if plan_type == 'comprehensive_without_modification':
+            prompt = """Provide guidance for comprehensive objective assessment without modifications.
+            
+            Comprehensive assessment approach:
+            - Full range of motion testing
+            - Complete strength assessment
+            - Thorough neurological examination
+            - Functional movement analysis
+            - Special tests and diagnostic procedures
+            - Pain provocation and assessment
+            
+            Format as systematic assessment protocol."""
+        elif plan_type == 'comprehensive_with_modifications':
+            prompt = """Provide guidance for comprehensive objective assessment with modifications.
+            
+            Modified assessment considerations:
+            - Safety precautions and contraindications
+            - Symptom irritability considerations
+            - Modified testing protocols
+            - Alternative assessment methods
+            - Pain monitoring during assessment
+            - Patient comfort and positioning
+            
+            Format as modified assessment protocol."""
+        else:
+            prompt = """Provide general guidance for objective assessment planning in physiotherapy.
+            
+            Assessment planning considerations:
+            - Hypothesis-driven testing approach
+            - Risk-benefit analysis of tests
+            - Patient safety and comfort
+            - Efficient and systematic approach
+            - Documentation requirements
+            
+            Format as assessment planning guidance."""
+        
+        response = claude_client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=400,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({
+            'success': True,
+            'guidance': response.content[0].text
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# =============================================================================
+# PROVISIONAL DIAGNOSIS AI ENDPOINTS
+# =============================================================================
+
+@app.route('/api/ai/diagnosis-guidance', methods=['POST'])
+@mobile_auth_required
+def api_diagnosis_guidance():
+    try:
+        data = request.get_json()
+        field_type = data.get('field_type')
+        
+        diagnosis_guidance = {
+            'likelihood': """Provide guidance for determining likelihood of diagnosis in physiotherapy.
+            
+            Likelihood assessment considerations:
+            - Integration of subjective and objective findings
+            - Pattern recognition and clinical experience
+            - Evidence-based diagnostic criteria
+            - Differential diagnosis considerations
+            - Confidence levels and uncertainty
+            
+            Format as diagnostic reasoning guidance.""",
+            
+            'structure_fault': """Provide guidance for identifying possible structure at fault.
+            
+            Structural assessment considerations:
+            - Anatomical knowledge and tissue properties
+            - Symptom location and referral patterns
+            - Mechanism of injury and pathophysiology
+            - Clinical test findings and interpretation
+            - Imaging correlation when available
+            
+            Format as structural diagnosis guidance.""",
+            
+            'symptom': """Provide guidance for symptom analysis in diagnosis.
+            
+            Symptom analysis considerations:
+            - Symptom behavior and characteristics
+            - Aggravating and easing factors
+            - Temporal patterns and progression
+            - Associated symptoms and red flags
+            - Functional impact and limitations
+            
+            Format as symptom interpretation guidance.""",
+            
+            'findings_support': """Provide guidance for identifying findings that support the diagnosis.
+            
+            Supporting evidence considerations:
+            - Positive clinical tests and their reliability
+            - Consistent symptom patterns
+            - Response to treatment trials
+            - Functional limitations matching hypothesis
+            - Patient history alignment
+            
+            Format as evidence-based diagnostic support.""",
+            
+            'findings_reject': """Provide guidance for identifying findings that reject the diagnosis.
+            
+            Contradictory evidence considerations:
+            - Negative clinical tests with high sensitivity
+            - Inconsistent symptom patterns
+            - Atypical presentations
+            - Failed treatment responses
+            - Alternative explanations
+            
+            Format as diagnostic exclusion criteria."""
+        }
+        
+        prompt = diagnosis_guidance.get(field_type, 'Provide general diagnostic reasoning guidance.')
+        
+        response = claude_client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=400,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({
+            'success': True,
+            'guidance': response.content[0].text,
+            'field_type': field_type
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/ai/differential-diagnosis', methods=['POST'])
+@mobile_auth_required
+def api_differential_diagnosis():
+    try:
+        data = request.get_json()
+        symptoms = data.get('symptoms', '')
+        
+        prompt = f"""Provide differential diagnosis assistance for physiotherapy.
+
+        Symptom information: {symptoms[:300] if symptoms else 'General musculoskeletal presentation'}
+        
+        Provide differential diagnosis guidance:
+        1. Most likely diagnostic hypotheses
+        2. Alternative diagnostic possibilities
+        3. Key distinguishing features
+        4. Recommended confirmatory tests
+        5. Red flags to monitor
+        
+        Format as structured differential diagnosis analysis."""
+        
+        response = claude_client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=500,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({
+            'success': True,
+            'differential': response.content[0].text
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# =============================================================================
+# SMART GOALS AI ENDPOINTS
+# =============================================================================
+
+@app.route('/api/ai/smart-goals-guidance', methods=['POST'])
+@mobile_auth_required
+def api_smart_goals_guidance():
+    try:
+        data = request.get_json()
+        goal_component = data.get('goal_component')
+        
+        smart_guidance = {
+            'patient_goal': """Provide guidance for developing patient-centered goals.
+            
+            Patient goal development:
+            - Patient-identified priorities and values
+            - Functional outcomes important to patient
+            - Realistic and achievable expectations
+            - Meaningful and motivating objectives
+            - Collaborative goal-setting process
+            
+            Format as patient-centered goal development guidance.""",
+            
+            'baseline_status': """Provide guidance for establishing baseline status measurements.
+            
+            Baseline measurement considerations:
+            - Objective and reproducible measures
+            - Standardized outcome tools
+            - Functional capacity assessment
+            - Pain and symptom quantification
+            - Quality of life indicators
+            
+            Format as baseline assessment guidance.""",
+            
+            'measurable_outcome': """Provide guidance for creating measurable outcomes.
+            
+            Measurable outcome criteria:
+            - Specific and quantifiable targets
+            - Valid and reliable measurement tools
+            - Clinically meaningful change values
+            - Functional improvement indicators
+            - Progress monitoring methods
+            
+            Format as outcome measurement guidance.""",
+            
+            'time_duration': """Provide guidance for setting realistic timeframes.
+            
+            Timeline considerations:
+            - Tissue healing and adaptation rates
+            - Condition-specific recovery patterns
+            - Patient factors affecting progress
+            - Evidence-based treatment durations
+            - Milestone and review points
+            
+            Format as realistic timeline guidance."""
+        }
+        
+        prompt = smart_guidance.get(goal_component, 'Provide general SMART goals guidance.')
+        
+        response = claude_client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=400,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({
+            'success': True,
+            'guidance': response.content[0].text,
+            'goal_component': goal_component
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/ai/goal-optimization', methods=['POST'])
+@mobile_auth_required
+def api_goal_optimization():
+    try:
+        data = request.get_json()
+        goals_data = data.get('goals_data', {})
+        
+        prompt = f"""Optimize SMART goals for physiotherapy based on current goal framework.
+
+        Current goal information:
+        Patient Goal: {goals_data.get('patient_goal', 'Not specified')[:200]}
+        Baseline: {goals_data.get('baseline_status', 'Not specified')[:200]}
+        Outcomes: {goals_data.get('measurable_outcome', 'Not specified')[:200]}
+        Timeline: {goals_data.get('time_duration', 'Not specified')[:100]}
+        
+        Provide optimization suggestions:
+        1. SMART criteria compliance check
+        2. Goal specificity improvements
+        3. Measurement enhancement suggestions
+        4. Timeline realism assessment
+        5. Patient motivation factors
+        
+        Format as goal optimization recommendations."""
+        
+        response = claude_client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=500,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({
+            'success': True,
+            'optimization': response.content[0].text
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# =============================================================================
+# TREATMENT PLAN AI ENDPOINTS
+# =============================================================================
+
+@app.route('/api/ai/treatment-guidance', methods=['POST'])
+@mobile_auth_required
+def api_treatment_guidance():
+    try:
+        data = request.get_json()
+        treatment_component = data.get('treatment_component')
+        
+        treatment_guidance = {
+            'treatment_plan': """Provide evidence-based treatment planning guidance.
+            
+            Treatment planning considerations:
+            - Evidence-based intervention selection
+            - Patient-specific factors and preferences
+            - Contraindications and precautions
+            - Progressive treatment approach
+            - Multimodal intervention strategies
+            
+            Format as systematic treatment planning guidance.""",
+            
+            'goal_targeted': """Provide guidance for goal-targeted treatment approaches.
+            
+            Goal-targeted treatment considerations:
+            - Specific interventions for functional goals
+            - Outcome-focused treatment selection
+            - Progress monitoring alignment
+            - Activity-specific training
+            - Functional movement integration
+            
+            Format as goal-directed treatment guidance.""",
+            
+            'reasoning': """Provide guidance for clinical reasoning in treatment planning.
+            
+            Clinical reasoning considerations:
+            - Pathophysiology-based intervention logic
+            - Evidence-based treatment rationale
+            - Risk-benefit analysis
+            - Treatment progression principles
+            - Expected response patterns
+            
+            Format as clinical reasoning framework.""",
+            
+            'reference': """Provide guidance for evidence-based referencing in treatment.
+            
+            Reference and evidence considerations:
+            - High-quality research evidence
+            - Clinical practice guidelines
+            - Systematic reviews and meta-analyses
+            - Professional standards and recommendations
+            - Continuing education sources
+            
+            Format as evidence-based practice guidance."""
+        }
+        
+        prompt = treatment_guidance.get(treatment_component, 'Provide general treatment planning guidance.')
+        
+        response = claude_client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=400,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({
+            'success': True,
+            'guidance': response.content[0].text,
+            'treatment_component': treatment_component
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/ai/treatment-protocols', methods=['POST'])
+@mobile_auth_required
+def api_treatment_protocols():
+    try:
+        data = request.get_json()
+        condition_area = data.get('condition_area', 'general')
+        goals = data.get('goals', '')
+        
+        prompt = f"""Provide evidence-based treatment protocols for physiotherapy.
+
+        Condition area: {condition_area}
+        Treatment goals: {goals[:300] if goals else 'General rehabilitation goals'}
+        
+        Provide treatment protocol guidance:
+        1. Phase-based treatment approach
+        2. Specific intervention techniques
+        3. Exercise prescription guidelines
+        4. Patient education components
+        5. Outcome monitoring strategies
+        6. Evidence-based references
+        
+        Format as comprehensive treatment protocol."""
+        
+        response = claude_client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=600,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({
+            'success': True,
+            'protocols': response.content[0].text
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# =============================================================================
+# CROSS-SCREEN INTEGRATION AI ENDPOINTS
+# =============================================================================
+
+@app.route('/api/ai/comprehensive-analysis', methods=['POST'])
+@mobile_auth_required
+def api_comprehensive_analysis():
+    try:
+        data = request.get_json()
+        patient_data = data.get('patient_data', {})
+        
+        prompt = """Provide comprehensive clinical reasoning analysis integrating all assessment components.
+
+        Complete patient assessment data available for analysis.
+        
+        Provide integrated analysis:
+        1. Clinical reasoning synthesis
+        2. Diagnostic confidence assessment
+        3. Prognosis and outcome prediction
+        4. Treatment approach optimization
+        5. Risk stratification summary
+        6. Interdisciplinary needs assessment
+        
+        Format as comprehensive clinical summary with recommendations."""
+        
+        response = claude_client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=600,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({
+            'success': True,
+            'analysis': response.content[0].text
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/ai/clinical-prompts-general', methods=['POST'])
+@mobile_auth_required
+def api_clinical_prompts_general():
+    try:
+        data = request.get_json()
+        screen_type = data.get('screen_type', 'general')
+        
+        prompts_map = {
+            'clinical_flags': 'Provide clinical reasoning prompts for comprehensive flags assessment and risk stratification.',
+            'objective_assessment': 'Provide clinical reasoning prompts for objective assessment planning and execution.',
+            'provisional_diagnosis': 'Provide clinical reasoning prompts for diagnostic hypothesis development and testing.',
+            'smart_goals': 'Provide clinical reasoning prompts for patient-centered goal setting and outcome planning.',
+            'treatment_plan': 'Provide clinical reasoning prompts for evidence-based treatment planning and intervention selection.'
+        }
+        
+        prompt = f"""{prompts_map.get(screen_type, 'Provide general clinical reasoning prompts for physiotherapy assessment.')}
+        
+        Generate 5-6 clinical reasoning questions that:
+        1. Enhance critical thinking
+        2. Ensure comprehensive assessment
+        3. Guide evidence-based decision making
+        4. Promote patient-centered care
+        5. Support clinical excellence
+        
+        Format as numbered clinical reasoning questions with brief rationale."""
+        
+        response = claude_client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=400,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({
+            'success': True,
+            'prompts': response.content[0].text
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
