@@ -2142,252 +2142,285 @@ def differential_testing():
         logger.error(f"Error in differential testing: {str(e)}")
         return jsonify({'error': 'Failed to generate testing strategy'}), 500
 
-# Add these new AI endpoints to your existing app.py file
-# Place them with your other AI endpoints
+# Add these endpoints to your app.py file after your existing AI endpoints
 
-@app.route('/api/ai/pathomechanism-education', methods=['POST'])
-def pathomechanism_education():
-    """Provide educational content about pathomechanism concepts"""
+# Pathomechanism-specific AI Guidance
+@app.route('/api/ai/pathomechanism-guidance', methods=['POST'])
+@mobile_auth_required
+def api_pathomechanism_guidance():
     try:
-        data = request.json
-        concept = data.get('concept', '')
-        context = data.get('context', '')
+        data = request.get_json()
+        field_type = data.get('field_type')  # area_involved, presenting_symptom, etc.
         
-        if not concept:
-            return jsonify({'error': 'Concept is required'}), 400
+        # Define pathomechanism-specific guidance prompts
+        pathomechanism_prompts = {
+            'area_involved': """Provide expert physiotherapy guidance for documenting Area Involved in pathomechanism analysis.
+            
+            Guidance for identifying and documenting anatomical areas:
+            - Focus on specific anatomical structures
+            - Consider primary vs secondary areas of involvement
+            - Include relevant anatomical landmarks
+            - Document precise location descriptions
+            
+            Format as 4-5 key assessment points with brief explanations.""",
+            
+            'presenting_symptom': """Provide expert physiotherapy guidance for documenting Presenting Symptoms in pathomechanism analysis.
+            
+            Guidance for symptom documentation:
+            - Primary vs secondary symptoms
+            - Symptom characteristics and behavior
+            - Aggravating and easing factors
+            - Temporal patterns and progression
+            
+            Format as 4-5 key documentation points with brief explanations.""",
+            
+            'pain_type': """Provide expert physiotherapy guidance for Pain Type classification in pathomechanism analysis.
+            
+            Modern pain science classification:
+            - Nociceptive pain characteristics
+            - Neuropathic pain indicators
+            - Nociplastic pain features
+            - Mixed pain presentations
+            - Clinical assessment approaches
+            
+            Format as structured guidance for pain type identification.""",
+            
+            'pain_nature': """Provide expert physiotherapy guidance for Pain Nature assessment in pathomechanism analysis.
+            
+            Pain quality assessment:
+            - Descriptive characteristics (sharp, dull, burning, etc.)
+            - Clinical significance of different pain qualities
+            - Relationship to underlying pathology
+            - Patient language interpretation
+            
+            Format as assessment guidance with clinical interpretations.""",
+            
+            'pain_severity': """Provide expert physiotherapy guidance for Pain Severity assessment in pathomechanism analysis.
+            
+            Comprehensive severity assessment:
+            - Numerical rating scales and interpretation
+            - Functional impact assessment
+            - Activity limitation correlation
+            - Quality of life considerations
+            
+            Format as structured assessment approach with measurement tools.""",
+            
+            'pain_irritability': """Provide expert physiotherapy guidance for Pain Irritability assessment in pathomechanism analysis.
+            
+            Irritability assessment framework:
+            - Ease of provocation criteria
+            - Time to settle characteristics
+            - Activity modification requirements
+            - Treatment approach implications
+            
+            Format as clinical decision-making guidance.""",
+            
+            'symptom_source': """Provide expert physiotherapy guidance for Symptom Source identification in pathomechanism analysis.
+            
+            Source identification guidance:
+            - Tissue-based vs non-tissue sources
+            - Peripheral vs central mechanisms
+            - Inflammatory vs mechanical sources
+            - Psychosocial contributing factors
+            
+            Format as systematic source analysis approach.""",
+            
+            'tissue_healing_stage': """Provide expert physiotherapy guidance for Tissue Healing Stage assessment in pathomechanism analysis.
+            
+            Healing stage identification:
+            - Acute inflammatory phase characteristics
+            - Subacute proliferation phase features
+            - Chronic remodeling phase indicators
+            - Clinical implications for each stage
+            
+            Format as stage-specific guidance with treatment implications."""
+        }
         
-        # Create educational prompt
-        prompt = f"""As a clinical educator in physiotherapy, provide clear, evidence-based education about this pathomechanism concept: {concept}
-
-Context: {context}
-
-Please provide:
-1. Clear definition and explanation
-2. Clinical significance for physiotherapists
-3. Evidence-based assessment considerations
-4. Treatment implications
-5. Key clinical pearls
-
-Keep the explanation professional but accessible, suitable for clinical practice. Focus on practical application and current evidence."""
-
-        response = client.messages.create(
-            model="claude-3-sonnet-20240229",
-            max_tokens=800,
+        prompt = pathomechanism_prompts.get(field_type)
+        
+        if not prompt:
+            return jsonify({'error': 'Invalid field type'}), 400
+        
+        response = claude_client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=400,
             messages=[{"role": "user", "content": prompt}]
         )
         
-        return jsonify({'guidance': response.content[0].text})
+        return jsonify({
+            'success': True,
+            'guidance': response.content[0].text,
+            'field_type': field_type
+        })
         
     except Exception as e:
-        logger.error(f"Error in pathomechanism education: {str(e)}")
-        return jsonify({'error': 'Service temporarily unavailable'}), 500
+        return jsonify({'error': str(e)}), 500
 
-@app.route('/api/ai/pain-mechanism-classifier', methods=['POST'])
-def pain_mechanism_classifier():
-    """Help classify pain mechanisms based on presentation"""
-    try:
-        data = request.json
-        symptoms = data.get('symptoms', '')
-        presentation = data.get('presentation', '')
-        
-        prompt = f"""As a pain science expert, help classify pain mechanisms based on this presentation:
 
-Symptoms: {symptoms}
-Clinical Presentation: {presentation}
-
-Provide guidance on:
-1. Most likely pain mechanism (nociceptive, neuropathic, nociplastic)
-2. Key clinical features supporting this classification
-3. Assessment approaches to confirm mechanism
-4. Red flags to consider
-5. Treatment implications based on mechanism
-
-Base your response on current pain science evidence and clinical reasoning principles."""
-
-        response = client.messages.create(
-            model="claude-3-sonnet-20240229",
-            max_tokens=700,
-            messages=[{"role": "user", "content": prompt}]
-        )
-        
-        return jsonify({'analysis': response.content[0].text})
-        
-    except Exception as e:
-        logger.error(f"Error in pain mechanism classification: {str(e)}")
-        return jsonify({'error': 'Service temporarily unavailable'}), 500
-
-@app.route('/api/ai/pathophysiology-assistant', methods=['POST'])
-def pathophysiology_assistant():
-    """Explain underlying pathophysiology and biological processes"""
-    try:
-        data = request.json
-        condition = data.get('condition', '')
-        symptoms = data.get('symptoms', '')
-        stage = data.get('healing_stage', '')
-        
-        prompt = f"""As a pathophysiology expert in musculoskeletal health, explain the underlying biological processes for:
-
-Condition/Area: {condition}
-Symptoms: {symptoms}
-Healing Stage: {stage}
-
-Please explain:
-1. Underlying tissue pathology
-2. Biological processes involved
-3. Connection between pathology and symptoms
-4. Current evidence on tissue healing
-5. Clinical implications for treatment timing
-
-Use current evidence and focus on practical clinical understanding."""
-
-        response = client.messages.create(
-            model="claude-3-sonnet-20240229",
-            max_tokens=800,
-            messages=[{"role": "user", "content": prompt}]
-        )
-        
-        return jsonify({'explanation': response.content[0].text})
-        
-    except Exception as e:
-        logger.error(f"Error in pathophysiology assistance: {str(e)}")
-        return jsonify({'error': 'Service temporarily unavailable'}), 500
-
-@app.route('/api/ai/irritability-analyzer', methods=['POST'])
-def irritability_analyzer():
-    """Analyze symptom irritability and provide guidance"""
-    try:
-        data = request.json
-        irritability_factors = data.get('factors', '')
-        symptom_behavior = data.get('behavior', '')
-        
-        prompt = f"""As a clinical reasoning expert, analyze symptom irritability based on:
-
-Irritability Factors: {irritability_factors}
-Symptom Behavior: {symptom_behavior}
-
-Provide analysis on:
-1. Irritability level assessment (high, moderate, low)
-2. Clinical reasoning for this assessment
-3. Treatment implications and precautions
-4. Progression considerations
-5. Patient education points about irritability
-
-Focus on evidence-based irritability assessment and clinical decision-making."""
-
-        response = client.messages.create(
-            model="claude-3-sonnet-20240229",
-            max_tokens=600,
-            messages=[{"role": "user", "content": prompt}]
-        )
-        
-        return jsonify({'analysis': response.content[0].text})
-        
-    except Exception as e:
-        logger.error(f"Error in irritability analysis: {str(e)}")
-        return jsonify({'error': 'Service temporarily unavailable'}), 500
-
-@app.route('/api/ai/healing-stage-identifier', methods=['POST'])
-def healing_stage_identifier():
-    """Help identify tissue healing stage and implications"""
-    try:
-        data = request.json
-        timeline = data.get('timeline', '')
-        symptoms = data.get('symptoms', '')
-        tissue_type = data.get('tissue_type', '')
-        
-        prompt = f"""As a tissue healing expert, help identify healing stage based on:
-
-Timeline: {timeline}
-Current Symptoms: {symptoms}
-Tissue Type: {tissue_type}
-
-Please provide:
-1. Most likely healing stage (acute inflammation, proliferation, remodeling)
-2. Typical characteristics of this stage
-3. Expected timeline and progression
-4. Treatment approach considerations
-5. Factors that may affect healing
-
-Base your response on current evidence about tissue healing and repair processes."""
-
-        response = client.messages.create(
-            model="claude-3-sonnet-20240229",
-            max_tokens=700,
-            messages=[{"role": "user", "content": prompt}]
-        )
-        
-        return jsonify({'guidance': response.content[0].text})
-        
-    except Exception as e:
-        logger.error(f"Error in healing stage identification: {str(e)}")
-        return jsonify({'error': 'Service temporarily unavailable'}), 500
-
-@app.route('/api/ai/pathomechanism-integration', methods=['POST'])
-def pathomechanism_integration():
-    """Integrate pathomechanism findings with other assessment data"""
-    try:
-        data = request.json
-        pathomechanism_data = data.get('pathomechanism', {})
-        subjective_summary = data.get('subjective_context', '')
-        
-        prompt = f"""As a clinical integration expert, help synthesize pathomechanism findings:
-
-Pathomechanism Analysis: {pathomechanism_data}
-Subjective Context: {subjective_summary}
-
-Provide integrated clinical reasoning:
-1. How pathomechanism aligns with subjective findings
-2. Consistencies and inconsistencies to explore
-3. Next steps in clinical reasoning
-4. Key hypotheses to test in objective examination
-5. Overall clinical picture synthesis
-
-Focus on evidence-based clinical reasoning and comprehensive patient assessment."""
-
-        response = client.messages.create(
-            model="claude-3-sonnet-20240229",
-            max_tokens=800,
-            messages=[{"role": "user", "content": prompt}]
-        )
-        
-        return jsonify({'integration': response.content[0].text})
-        
-    except Exception as e:
-        logger.error(f"Error in pathomechanism integration: {str(e)}")
-        return jsonify({'error': 'Service temporarily unavailable'}), 500
-
+# Pain Science Education Assistant
 @app.route('/api/ai/pain-science-education', methods=['POST'])
-def pain_science_education():
-    """Provide current pain science education and evidence"""
+@mobile_auth_required
+def api_pain_science_education():
     try:
-        data = request.json
-        topic = data.get('topic', '')
-        clinical_context = data.get('context', '')
+        data = request.get_json()
+        pain_type = data.get('pain_type', '')
         
-        prompt = f"""As a pain science educator, provide evidence-based education on: {topic}
-
-Clinical Context: {clinical_context}
-
-Please cover:
-1. Current understanding from pain science research
-2. Clinical application and relevance
-3. Key concepts for patient education
-4. Evidence-based assessment approaches
-5. Treatment implications
-
-Focus on translating pain science research into practical clinical application."""
-
-        response = client.messages.create(
-            model="claude-3-sonnet-20240229",
-            max_tokens=700,
+        prompt = f"""Provide modern pain science education for physiotherapists about pain mechanisms.
+        
+        Focus area: {pain_type if pain_type else 'general pain mechanisms'}
+        
+        Provide evidence-based education covering:
+        1. Current understanding of pain mechanisms
+        2. Clinical presentation characteristics
+        3. Assessment approaches
+        4. Treatment implications
+        5. Patient education considerations
+        
+        Keep explanations clinically relevant and evidence-based.
+        Format as structured educational content."""
+        
+        response = claude_client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=500,
             messages=[{"role": "user", "content": prompt}]
         )
         
-        return jsonify({'education': response.content[0].text})
+        return jsonify({
+            'success': True,
+            'education': response.content[0].text
+        })
         
     except Exception as e:
-        logger.error(f"Error in pain science education: {str(e)}")
-        return jsonify({'error': 'Service temporarily unavailable'}), 500
+        return jsonify({'error': str(e)}), 500
+
+
+# Pathomechanism Analysis Assistant
+@app.route('/api/ai/pathomechanism-analysis', methods=['POST'])
+@mobile_auth_required
+def api_pathomechanism_analysis():
+    try:
+        data = request.get_json()
+        completed_fields = data.get('completed_fields', {})
+        
+        # Build analysis prompt from completed fields (de-identified)
+        analysis_text = "Pathomechanism analysis for physiotherapy reasoning:\n\n"
+        
+        field_labels = {
+            'area_involved': 'Area Involved',
+            'presenting_symptom': 'Presenting Symptom',
+            'pain_type': 'Pain Type',
+            'pain_nature': 'Pain Nature', 
+            'pain_severity': 'Pain Severity',
+            'pain_irritability': 'Pain Irritability',
+            'symptom_source': 'Symptom Source',
+            'tissue_healing_stage': 'Tissue Healing Stage'
+        }
+        
+        for field, value in completed_fields.items():
+            if value and value.strip():
+                label = field_labels.get(field, field.replace('_', ' ').title())
+                analysis_text += f"{label}: {value}\n"
+        
+        prompt = f"""Analyze this pathomechanism assessment for clinical reasoning patterns.
+
+        {analysis_text}
+        
+        Provide analysis focusing on:
+        1. Consistency between different pathomechanism components
+        2. Clinical reasoning patterns that emerge
+        3. Potential diagnostic hypotheses suggested
+        4. Areas needing further assessment
+        5. Treatment planning implications
+        
+        Format as structured clinical reasoning analysis."""
+        
+        response = claude_client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=500,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({
+            'success': True,
+            'analysis': response.content[0].text
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Clinical Decision Support for Pathomechanism
+@app.route('/api/ai/pathomechanism-prompts', methods=['POST'])
+@mobile_auth_required
+def api_pathomechanism_prompts():
+    try:
+        data = request.get_json()
+        completed_domains = data.get('completed_domains', [])
+        
+        domains_text = ", ".join(completed_domains) if completed_domains else "none"
+        
+        prompt = f"""Provide expert clinical reasoning prompts for pathomechanism analysis in physiotherapy.
+
+        Completed pathomechanism domains: {domains_text}
+        
+        Provide 5-6 clinical reasoning questions focusing on:
+        1. Pain mechanism identification and classification
+        2. Tissue pathology and healing stage assessment  
+        3. Symptom source and irritability evaluation
+        4. Integration with subjective examination findings
+        5. Preparation for objective assessment planning
+        
+        Format as numbered clinical reasoning questions with brief rationale."""
+        
+        response = claude_client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=400,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({
+            'success': True,
+            'prompts': response.content[0].text
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Smart Template Suggestions
+@app.route('/api/ai/pathomechanism-templates', methods=['POST'])
+@mobile_auth_required
+def api_pathomechanism_templates():
+    try:
+        data = request.get_json()
+        condition_area = data.get('condition_area', 'general')  # e.g., 'spine', 'shoulder', 'knee'
+        field_type = data.get('field_type', '')
+        
+        prompt = f"""Provide a clinical template for {field_type.replace('_', ' ')} assessment in {condition_area.replace('_', ' ')} conditions.
+
+        Create a professional template focusing on:
+        - Evidence-based assessment criteria
+        - Standardized terminology
+        - Clinical decision-making guidance
+        - Professional documentation format
+        
+        Return as a template that can be customized for individual patients."""
+        
+        response = claude_client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=300,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({
+            'success': True,
+            'template': response.content[0].text,
+            'condition_area': condition_area,
+            'field_type': field_type
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
