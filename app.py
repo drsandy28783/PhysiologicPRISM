@@ -1144,8 +1144,8 @@ def api_test_ai():
         return jsonify({'ai_response': response.content[0].text})
     except Exception as e:
         return jsonify({'error': f'AI service error: {str(e)}'}), 500
-    
-    # Add Patient API
+
+# Add Patient API
 @app.route('/api/patients', methods=['POST'])
 @mobile_auth_required
 def api_add_patient():
@@ -1257,6 +1257,7 @@ def api_get_clinical_form(form_type, patient_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# AI Clinical Assistant
 @app.route('/api/ai/clinical-assistant', methods=['POST'])
 @mobile_auth_required
 def ai_clinical_assistant():
@@ -1284,6 +1285,26 @@ def ai_clinical_assistant():
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    
+
+# Simple AI Test
+@app.route('/api/ai/test-simple', methods=['GET'])
+def test_ai_simple():
+    try:
+        if claude_client is None:
+            return jsonify({'error': 'Claude client not initialized'})
+        
+        response = claude_client.messages.create(
+            model="claude-3-sonnet-20240229",
+            max_tokens=50,
+            messages=[{"role": "user", "content": "Say hello"}]
+        )
+        
+        return jsonify({
+            'success': True,
+            'ai_response': response.content[0].text
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
 if __name__ == '__main__':
     app.run(debug=True)
