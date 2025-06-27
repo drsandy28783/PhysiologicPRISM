@@ -1306,5 +1306,284 @@ def test_ai_simple():
     except Exception as e:
         return jsonify({'error': str(e)})
 
+# PRIVACY-COMPLIANT AI ENDPOINTS
+# NO patient data is sent to Claude - only generic clinical guidance requests
+
+# Generic ICF Guidance (No Patient Data)
+@app.route('/api/ai/icf-guidance', methods=['POST'])
+@mobile_auth_required
+def api_icf_guidance():
+    try:
+        data = request.get_json()
+        field_type = data.get('field_type')  # Only the ICF domain type
+        # NO patient data sent to Claude
+        
+        # Pre-defined ICF guidance prompts (no patient data)
+        icf_prompts = {
+            'body_structure': """Provide expert physiotherapy guidance for ICF Body Structure assessment.
+            
+            List 5-6 key areas to assess and document:
+            - Focus on anatomical structures and impairments
+            - Use professional ICF terminology
+            - Include specific examination techniques
+            - Provide documentation examples
+            
+            Format as numbered list with brief explanations.""",
+            
+            'body_function': """Provide expert physiotherapy guidance for ICF Body Function assessment.
+            
+            List 5-6 key functional areas to assess:
+            - Focus on physiological and psychological functions
+            - Include range of motion, strength, pain, sensation
+            - Use standardized assessment methods
+            - Provide measurement guidelines
+            
+            Format as numbered list with brief explanations.""",
+            
+            'activity_performance': """Provide expert physiotherapy guidance for ICF Activity Performance assessment.
+            
+            List 5-6 key areas to evaluate:
+            - Focus on what patients actually do in real life
+            - Include daily activities and participation
+            - Consider environmental factors affecting performance
+            - Provide assessment techniques
+            
+            Format as numbered list with brief explanations.""",
+            
+            'activity_capacity': """Provide expert physiotherapy guidance for ICF Activity Capacity assessment.
+            
+            List 5-6 key areas to evaluate:
+            - Focus on maximum potential in standardized conditions
+            - Include standardized testing approaches
+            - Consider capacity vs performance differences
+            - Provide measurement guidelines
+            
+            Format as numbered list with brief explanations.""",
+            
+            'contextual_environmental': """Provide expert physiotherapy guidance for ICF Environmental Factors assessment.
+            
+            List 5-6 key environmental areas to assess:
+            - Focus on external barriers and facilitators
+            - Include physical, social, and attitudinal environment
+            - Consider assistive technology and accessibility
+            - Provide assessment strategies
+            
+            Format as numbered list with brief explanations.""",
+            
+            'contextual_personal': """Provide expert physiotherapy guidance for ICF Personal Factors assessment.
+            
+            List 5-6 key personal characteristics to consider:
+            - Focus on individual attributes affecting function
+            - Include lifestyle, coping strategies, motivation
+            - Consider cultural and educational background
+            - Provide assessment approaches
+            
+            Format as numbered list with brief explanations."""
+        }
+        
+        prompt = icf_prompts.get(field_type)
+        
+        if not prompt:
+            return jsonify({'error': 'Invalid field type'}), 400
+        
+        response = claude_client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=400,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({
+            'success': True,
+            'guidance': response.content[0].text,
+            'field_type': field_type
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Generic Clinical Reasoning Prompts (No Patient Data)
+@app.route('/api/ai/clinical-prompts', methods=['POST'])
+@mobile_auth_required
+def api_clinical_prompts():
+    try:
+        data = request.get_json()
+        completed_domains = data.get('completed_domains', [])  # Only domain names, no content
+        
+        # Generic prompt based only on which domains are completed
+        domains_text = ", ".join(completed_domains) if completed_domains else "none"
+        
+        prompt = f"""You are an expert physiotherapist providing generic clinical reasoning guidance for ICF subjective examination.
+
+        Completed ICF domains so far: {domains_text}
+        
+        Provide 5-6 generic clinical reasoning questions that would help complete a comprehensive subjective examination:
+        1. Focus on exploring relationships between ICF domains
+        2. Include questions about functional limitations
+        3. Consider patient perspectives and goals
+        4. Address potential red flags to screen for
+        5. Include contextual factors to explore
+        
+        Provide general clinical reasoning questions that would apply to most musculoskeletal conditions.
+        Format as numbered list with brief rationale for each question."""
+        
+        response = claude_client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=400,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({
+            'success': True,
+            'prompts': response.content[0].text
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Local Red Flag Detection (No Data Sent to Claude)
+@app.route('/api/ai/red-flag-check', methods=['POST'])
+@mobile_auth_required
+def api_red_flag_check():
+    try:
+        data = request.get_json()
+        text_content = data.get('text_content', '').lower()
+        
+        # LOCAL red flag detection - no data sent to Claude
+        red_flag_keywords = {
+            'neurological': [
+                'cauda equina', 'saddle numbness', 'bowel incontinence', 'bladder incontinence',
+                'progressive weakness', 'foot drop', 'bilateral symptoms', 'gait disturbance'
+            ],
+            'cancer': [
+                'night pain', 'constant pain', 'unexplained weight loss', 'previous cancer',
+                'cancer history', 'bone pain', 'systemic symptoms', 'age over 50'
+            ],
+            'infection': [
+                'fever', 'systemically unwell', 'hot swollen joint', 'recent infection',
+                'immunocompromised', 'iv drug use', 'recent surgery'
+            ],
+            'fracture': [
+                'significant trauma', 'minor trauma age', 'osteoporosis', 'steroid use',
+                'unable to weight bear', 'deformity', 'recent fall'
+            ],
+            'vascular': [
+                'claudication', 'cold limb', 'absent pulse', 'color change',
+                'acute onset', 'severe pain rest'
+            ]
+        }
+        
+        detected_flags = []
+        for category, keywords in red_flag_keywords.items():
+            found_keywords = [kw for kw in keywords if kw in text_content]
+            if found_keywords:
+                detected_flags.append({
+                    'category': category,
+                    'keywords': found_keywords
+                })
+        
+        has_red_flags = len(detected_flags) > 0
+        
+        if has_red_flags:
+            analysis = "Red flags detected:\n\n"
+            for flag in detected_flags:
+                analysis += f"• {flag['category'].title()}: {', '.join(flag['keywords'])}\n"
+            analysis += "\nRecommendation: Consider immediate medical review."
+        else:
+            analysis = "No immediate red flags identified in current assessment."
+        
+        return jsonify({
+            'success': True,
+            'has_red_flags': has_red_flags,
+            'analysis': analysis,
+            'detected_categories': [f['category'] for f in detected_flags]
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Generic Text Enhancement (De-identified)
+@app.route('/api/ai/enhance-text', methods=['POST'])
+@mobile_auth_required
+def api_enhance_text():
+    try:
+        data = request.get_json()
+        text_content = data.get('text_content', '')
+        field_type = data.get('field_type', '')
+        
+        # Remove any potential identifiers before sending
+        # Basic de-identification (you may want to enhance this)
+        import re
+        
+        # Remove potential patient identifiers
+        deidentified_text = re.sub(r'\b(patient|pt|mr|mrs|ms)\s+[a-z]+\b', '[patient]', text_content, flags=re.IGNORECASE)
+        deidentified_text = re.sub(r'\b\d{1,3}\s*years?\s*old\b', '[age] years old', deidentified_text, flags=re.IGNORECASE)
+        deidentified_text = re.sub(r'\bPAT-\d+\b', '[patient-id]', deidentified_text)
+        
+        prompt = f"""Enhance this clinical documentation for ICF {field_type.replace('_', ' ')} domain.
+
+        Text to enhance: "{deidentified_text}"
+        
+        Improve the text by:
+        1. Using professional clinical terminology
+        2. Following ICF framework guidelines
+        3. Making it more specific and measurable
+        4. Ensuring clarity and completeness
+        5. Maintaining clinical accuracy
+        
+        Return only the enhanced text, no explanations."""
+        
+        response = claude_client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=300,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({
+            'success': True,
+            'enhanced_text': response.content[0].text
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Generic ICF Domain Templates (No Patient Data)
+@app.route('/api/ai/icf-templates', methods=['POST'])
+@mobile_auth_required
+def api_icf_templates():
+    try:
+        data = request.get_json()
+        condition_type = data.get('condition_type', 'general')  # e.g., 'low_back_pain', 'shoulder', 'knee'
+        field_type = data.get('field_type', '')
+        
+        prompt = f"""Provide a professional template for ICF {field_type.replace('_', ' ')} assessment for {condition_type.replace('_', ' ')} conditions.
+
+        Create a template with:
+        1. Key assessment areas
+        2. Professional terminology
+        3. Structured format
+        4. Measurable criteria where applicable
+        
+        Return as a template that physiotherapists can customize for their patients."""
+        
+        response = claude_client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=300,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({
+            'success': True,
+            'template': response.content[0].text,
+            'condition_type': condition_type,
+            'field_type': field_type
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True)
