@@ -2142,5 +2142,252 @@ def differential_testing():
         logger.error(f"Error in differential testing: {str(e)}")
         return jsonify({'error': 'Failed to generate testing strategy'}), 500
 
+# Add these new AI endpoints to your existing app.py file
+# Place them with your other AI endpoints
+
+@app.route('/api/ai/pathomechanism-education', methods=['POST'])
+def pathomechanism_education():
+    """Provide educational content about pathomechanism concepts"""
+    try:
+        data = request.json
+        concept = data.get('concept', '')
+        context = data.get('context', '')
+        
+        if not concept:
+            return jsonify({'error': 'Concept is required'}), 400
+        
+        # Create educational prompt
+        prompt = f"""As a clinical educator in physiotherapy, provide clear, evidence-based education about this pathomechanism concept: {concept}
+
+Context: {context}
+
+Please provide:
+1. Clear definition and explanation
+2. Clinical significance for physiotherapists
+3. Evidence-based assessment considerations
+4. Treatment implications
+5. Key clinical pearls
+
+Keep the explanation professional but accessible, suitable for clinical practice. Focus on practical application and current evidence."""
+
+        response = client.messages.create(
+            model="claude-3-sonnet-20240229",
+            max_tokens=800,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({'guidance': response.content[0].text})
+        
+    except Exception as e:
+        logger.error(f"Error in pathomechanism education: {str(e)}")
+        return jsonify({'error': 'Service temporarily unavailable'}), 500
+
+@app.route('/api/ai/pain-mechanism-classifier', methods=['POST'])
+def pain_mechanism_classifier():
+    """Help classify pain mechanisms based on presentation"""
+    try:
+        data = request.json
+        symptoms = data.get('symptoms', '')
+        presentation = data.get('presentation', '')
+        
+        prompt = f"""As a pain science expert, help classify pain mechanisms based on this presentation:
+
+Symptoms: {symptoms}
+Clinical Presentation: {presentation}
+
+Provide guidance on:
+1. Most likely pain mechanism (nociceptive, neuropathic, nociplastic)
+2. Key clinical features supporting this classification
+3. Assessment approaches to confirm mechanism
+4. Red flags to consider
+5. Treatment implications based on mechanism
+
+Base your response on current pain science evidence and clinical reasoning principles."""
+
+        response = client.messages.create(
+            model="claude-3-sonnet-20240229",
+            max_tokens=700,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({'analysis': response.content[0].text})
+        
+    except Exception as e:
+        logger.error(f"Error in pain mechanism classification: {str(e)}")
+        return jsonify({'error': 'Service temporarily unavailable'}), 500
+
+@app.route('/api/ai/pathophysiology-assistant', methods=['POST'])
+def pathophysiology_assistant():
+    """Explain underlying pathophysiology and biological processes"""
+    try:
+        data = request.json
+        condition = data.get('condition', '')
+        symptoms = data.get('symptoms', '')
+        stage = data.get('healing_stage', '')
+        
+        prompt = f"""As a pathophysiology expert in musculoskeletal health, explain the underlying biological processes for:
+
+Condition/Area: {condition}
+Symptoms: {symptoms}
+Healing Stage: {stage}
+
+Please explain:
+1. Underlying tissue pathology
+2. Biological processes involved
+3. Connection between pathology and symptoms
+4. Current evidence on tissue healing
+5. Clinical implications for treatment timing
+
+Use current evidence and focus on practical clinical understanding."""
+
+        response = client.messages.create(
+            model="claude-3-sonnet-20240229",
+            max_tokens=800,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({'explanation': response.content[0].text})
+        
+    except Exception as e:
+        logger.error(f"Error in pathophysiology assistance: {str(e)}")
+        return jsonify({'error': 'Service temporarily unavailable'}), 500
+
+@app.route('/api/ai/irritability-analyzer', methods=['POST'])
+def irritability_analyzer():
+    """Analyze symptom irritability and provide guidance"""
+    try:
+        data = request.json
+        irritability_factors = data.get('factors', '')
+        symptom_behavior = data.get('behavior', '')
+        
+        prompt = f"""As a clinical reasoning expert, analyze symptom irritability based on:
+
+Irritability Factors: {irritability_factors}
+Symptom Behavior: {symptom_behavior}
+
+Provide analysis on:
+1. Irritability level assessment (high, moderate, low)
+2. Clinical reasoning for this assessment
+3. Treatment implications and precautions
+4. Progression considerations
+5. Patient education points about irritability
+
+Focus on evidence-based irritability assessment and clinical decision-making."""
+
+        response = client.messages.create(
+            model="claude-3-sonnet-20240229",
+            max_tokens=600,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({'analysis': response.content[0].text})
+        
+    except Exception as e:
+        logger.error(f"Error in irritability analysis: {str(e)}")
+        return jsonify({'error': 'Service temporarily unavailable'}), 500
+
+@app.route('/api/ai/healing-stage-identifier', methods=['POST'])
+def healing_stage_identifier():
+    """Help identify tissue healing stage and implications"""
+    try:
+        data = request.json
+        timeline = data.get('timeline', '')
+        symptoms = data.get('symptoms', '')
+        tissue_type = data.get('tissue_type', '')
+        
+        prompt = f"""As a tissue healing expert, help identify healing stage based on:
+
+Timeline: {timeline}
+Current Symptoms: {symptoms}
+Tissue Type: {tissue_type}
+
+Please provide:
+1. Most likely healing stage (acute inflammation, proliferation, remodeling)
+2. Typical characteristics of this stage
+3. Expected timeline and progression
+4. Treatment approach considerations
+5. Factors that may affect healing
+
+Base your response on current evidence about tissue healing and repair processes."""
+
+        response = client.messages.create(
+            model="claude-3-sonnet-20240229",
+            max_tokens=700,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({'guidance': response.content[0].text})
+        
+    except Exception as e:
+        logger.error(f"Error in healing stage identification: {str(e)}")
+        return jsonify({'error': 'Service temporarily unavailable'}), 500
+
+@app.route('/api/ai/pathomechanism-integration', methods=['POST'])
+def pathomechanism_integration():
+    """Integrate pathomechanism findings with other assessment data"""
+    try:
+        data = request.json
+        pathomechanism_data = data.get('pathomechanism', {})
+        subjective_summary = data.get('subjective_context', '')
+        
+        prompt = f"""As a clinical integration expert, help synthesize pathomechanism findings:
+
+Pathomechanism Analysis: {pathomechanism_data}
+Subjective Context: {subjective_summary}
+
+Provide integrated clinical reasoning:
+1. How pathomechanism aligns with subjective findings
+2. Consistencies and inconsistencies to explore
+3. Next steps in clinical reasoning
+4. Key hypotheses to test in objective examination
+5. Overall clinical picture synthesis
+
+Focus on evidence-based clinical reasoning and comprehensive patient assessment."""
+
+        response = client.messages.create(
+            model="claude-3-sonnet-20240229",
+            max_tokens=800,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({'integration': response.content[0].text})
+        
+    except Exception as e:
+        logger.error(f"Error in pathomechanism integration: {str(e)}")
+        return jsonify({'error': 'Service temporarily unavailable'}), 500
+
+@app.route('/api/ai/pain-science-education', methods=['POST'])
+def pain_science_education():
+    """Provide current pain science education and evidence"""
+    try:
+        data = request.json
+        topic = data.get('topic', '')
+        clinical_context = data.get('context', '')
+        
+        prompt = f"""As a pain science educator, provide evidence-based education on: {topic}
+
+Clinical Context: {clinical_context}
+
+Please cover:
+1. Current understanding from pain science research
+2. Clinical application and relevance
+3. Key concepts for patient education
+4. Evidence-based assessment approaches
+5. Treatment implications
+
+Focus on translating pain science research into practical clinical application."""
+
+        response = client.messages.create(
+            model="claude-3-sonnet-20240229",
+            max_tokens=700,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({'education': response.content[0].text})
+        
+    except Exception as e:
+        logger.error(f"Error in pain science education: {str(e)}")
+        return jsonify({'error': 'Service temporarily unavailable'}), 500
+
 if __name__ == '__main__':
     app.run(debug=True)
