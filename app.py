@@ -1886,5 +1886,261 @@ Requirements:
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+# Add these endpoints to your existing app.py file
+
+@app.route('/api/ai/examination-guidance', methods=['POST'])
+def examination_guidance():
+    """Provide examination technique guidance for specific test categories"""
+    try:
+        data = request.get_json()
+        test_category = data.get('test_category', '')
+        suspected_condition = data.get('suspected_condition', '')
+        
+        if not test_category:
+            return jsonify({'error': 'Test category is required'}), 400
+        
+        # Generic clinical prompt - no patient data
+        prompt = f"""
+        As a clinical educator, provide examination guidance for: {test_category}
+        
+        Context: {suspected_condition if suspected_condition else 'General examination planning'}
+        
+        Please provide:
+        1. Proper examination technique and procedure
+        2. What to look for during testing
+        3. Safety considerations and contraindications
+        4. Expected normal vs abnormal findings
+        5. Clinical significance of results
+        
+        Format as clear, practical guidance for physiotherapists.
+        Keep response concise but comprehensive (max 300 words).
+        """
+        
+        response = client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=1000,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({
+            'guidance': response.content[0].text,
+            'category': test_category
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in examination guidance: {str(e)}")
+        return jsonify({'error': 'Failed to generate examination guidance'}), 500
+
+@app.route('/api/ai/test-selection', methods=['POST'])
+def test_selection_ai():
+    """Suggest appropriate tests based on clinical presentation"""
+    try:
+        data = request.get_json()
+        symptoms = data.get('symptoms', '')
+        body_region = data.get('body_region', '')
+        suspected_pathology = data.get('suspected_pathology', '')
+        
+        # Generic clinical reasoning - no patient identifiers
+        prompt = f"""
+        As a clinical reasoning expert, suggest examination tests for:
+        
+        Body Region: {body_region}
+        Symptoms: {symptoms}
+        Suspected Condition: {suspected_pathology}
+        
+        Please recommend:
+        1. Priority 1 tests (essential/high-yield)
+        2. Priority 2 tests (if time permits)
+        3. Special tests to consider
+        4. Tests to avoid or use with caution
+        5. Optimal examination sequence
+        
+        Format as practical recommendations for examination planning.
+        Focus on evidence-based, efficient testing protocols.
+        """
+        
+        response = client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=1000,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({
+            'recommendations': response.content[0].text,
+            'body_region': body_region
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in test selection: {str(e)}")
+        return jsonify({'error': 'Failed to generate test recommendations'}), 500
+
+@app.route('/api/ai/examination-safety', methods=['POST'])
+def examination_safety():
+    """Provide safety alerts and contraindications"""
+    try:
+        data = request.get_json()
+        planned_tests = data.get('planned_tests', [])
+        patient_conditions = data.get('patient_conditions', '')
+        
+        # Safety-focused prompt - no patient identifiers
+        prompt = f"""
+        As a clinical safety expert, review these planned examination tests:
+        
+        Planned Tests: {', '.join(planned_tests)}
+        Relevant Conditions: {patient_conditions}
+        
+        Please identify:
+        1. Absolute contraindications (do not perform)
+        2. Relative contraindications (use caution)
+        3. Modifications needed for safe testing
+        4. Red flags to watch for during examination
+        5. When to stop or modify testing
+        
+        Format as clear safety guidelines.
+        Prioritize patient safety above all else.
+        """
+        
+        response = client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=1000,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({
+            'safety_guidance': response.content[0].text,
+            'planned_tests': planned_tests
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in examination safety: {str(e)}")
+        return jsonify({'error': 'Failed to generate safety guidance'}), 500
+
+@app.route('/api/ai/examination-protocol', methods=['POST'])
+def examination_protocol():
+    """Generate step-by-step examination protocols"""
+    try:
+        data = request.get_json()
+        body_region = data.get('body_region', '')
+        examination_focus = data.get('examination_focus', '')
+        time_available = data.get('time_available', 'standard')
+        
+        # Protocol generation - no patient data
+        prompt = f"""
+        As a clinical protocol expert, create an examination sequence for:
+        
+        Body Region: {body_region}
+        Focus: {examination_focus}
+        Time Frame: {time_available}
+        
+        Provide a structured protocol with:
+        1. Optimal sequence of tests (start to finish)
+        2. Estimated time for each component
+        3. Patient positioning requirements
+        4. Equipment needed
+        5. Key clinical pearls for efficiency
+        
+        Format as a clear, step-by-step protocol.
+        Make it practical for clinical use.
+        """
+        
+        response = client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=1000,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({
+            'protocol': response.content[0].text,
+            'body_region': body_region,
+            'focus': examination_focus
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in examination protocol: {str(e)}")
+        return jsonify({'error': 'Failed to generate examination protocol'}), 500
+
+@app.route('/api/ai/plan-documentation', methods=['POST'])
+def plan_documentation():
+    """Enhance examination plan documentation"""
+    try:
+        data = request.get_json()
+        examination_plan = data.get('examination_plan', '')
+        
+        if not examination_plan:
+            return jsonify({'error': 'Examination plan text is required'}), 400
+        
+        # Documentation enhancement - no patient identifiers
+        prompt = f"""
+        As a clinical documentation expert, enhance this examination plan:
+        
+        "{examination_plan}"
+        
+        Please improve by:
+        1. Using professional clinical terminology
+        2. Following standard documentation format
+        3. Ensuring completeness and clarity
+        4. Adding appropriate clinical reasoning
+        5. Making it suitable for medical records
+        
+        Return only the enhanced version.
+        Maintain all original clinical intent.
+        """
+        
+        response = client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=1000,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({
+            'enhanced_plan': response.content[0].text,
+            'original_plan': examination_plan
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in plan documentation: {str(e)}")
+        return jsonify({'error': 'Failed to enhance documentation'}), 500
+
+@app.route('/api/ai/differential-testing', methods=['POST'])
+def differential_testing():
+    """Suggest tests for differential diagnosis"""
+    try:
+        data = request.get_json()
+        differential_list = data.get('differential_diagnoses', [])
+        primary_symptoms = data.get('primary_symptoms', '')
+        
+        # Differential diagnosis testing - no patient data
+        prompt = f"""
+        As a diagnostic reasoning expert, suggest examination tests to differentiate between:
+        
+        Differential Diagnoses: {', '.join(differential_list)}
+        Primary Symptoms: {primary_symptoms}
+        
+        Recommend:
+        1. Tests that help rule IN each condition
+        2. Tests that help rule OUT each condition
+        3. Most discriminating tests for differential diagnosis
+        4. Testing sequence for efficient differentiation
+        5. Key findings that distinguish each condition
+        
+        Format as diagnostic testing strategy.
+        Focus on tests with high diagnostic utility.
+        """
+        
+        response = client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=1000,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({
+            'testing_strategy': response.content[0].text,
+            'differentials': differential_list
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in differential testing: {str(e)}")
+        return jsonify({'error': 'Failed to generate testing strategy'}), 500
+
 if __name__ == '__main__':
     app.run(debug=True)
