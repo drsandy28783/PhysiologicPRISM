@@ -6,7 +6,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from firebase_init import firebase_admin  # uses your existing setup
 from firebase_admin import firestore
 db = firestore.client()
-
+from flask_cors import CORS
+import jwt
+from datetime import datetime, timedelta
+import anthropic
 
 def log_action(user_id, action, details=None):
     db.collection('audit_logs').add({
@@ -18,6 +21,8 @@ def log_action(user_id, action, details=None):
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'fallback_default')
+CORS(app)  # Enable CORS for mobile app
+claude_client = anthropic.Anthropic(api_key=os.environ.get('CLAUDE_API_KEY'))
 
 
 def login_required(approved_only=True):
@@ -1032,6 +1037,110 @@ def edit_patient(patient_id):
 
     return render_template('edit_patient.html', patient=patient)
 
+# Mobile API Endpoints - ADD THIS ENTIRE SECTION
+
+# JWT Token Generation
+@app.route('/api/auth/login', methods=['POST'])
+def api_login():
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+    
+    users = db.collection('users').where('email', '==', email).stream()
+    user_doc = next(users, None)
+    
+    if not user_doc:
+        return jsonify({'error': 'Invalid credentials'}), 401
+    
+    user = user_doc.to_dict()
+    user['id'] = user_doc.id
+    
+    if not check_password_hash(user['password'], password):
+        return jsonify({'error': 'Invalid credentials'}), 401
+    
+    if user.get('approved') != 1 or user.get('active') != 1:
+        return jsonify({'error': 'Account not approved or deactivated'}), 401
+    
+    # Generate JWT token
+    token = jwt.encode({
+        'user_id': user['id'],
+        'exp': datetime.utcnow() + timedelta(days=30)
+    }, app.secret_key, algorithm='HS256')
+    
+    log_action(user['id'], "Mobile Login", f"{user['name']} logged in via mobile")
+    
+    return jsonify({
+        'token': token,
+        'user': {
+            'id': user['id'],
+            'name': user['name'],
+            'email': user['email'],
+            'is_admin': user['is_admin'],
+            'institute': user.get('institute')
+        }
+    })
+
+# Mobile Authentication Decorator
+def mobile_auth_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        token = request.headers.get('Authorization')
+        if not token:
+            return jsonify({'error': 'No token provided'}), 401
+        
+        try:
+            if token.startswith('Bearer '):
+                token = token[7:]
+            data = jwt.decode(token, app.secret_key, algorithms=['HS256'])
+            request.user_id = data['user_id']
+        except:
+            return jsonify({'error': 'Invalid token'}), 401
+        
+        return f(*args, **kwargs)
+    return decorated_function
+
+# Test API endpoint
+@app.route('/api/test', methods=['GET'])
+def api_test():
+    return jsonify({'message': 'API is working!', 'timestamp': datetime.utcnow().isoformat()})
+
+# Patient API Endpoints
+@app.route('/api/patients', methods=['GET'])
+@mobile_auth_required
+def api_get_patients():
+    user_doc = db.collection('users').document(request.user_id).get()
+    user = user_doc.to_dict()
+    
+    if user.get('is_admin') == 1:
+        physios = db.collection('users').where('institute', '==', user['institute']).stream()
+        physio_ids = [p.id for p in physios]
+        patients = []
+        for pid in physio_ids:
+            patients.extend(db.collection('patients').where('physio_id', '==', pid).stream())
+    else:
+        patients = db.collection('patients').where('physio_id', '==', request.user_id).stream()
+    
+    patient_list = []
+    for p in patients:
+        data = p.to_dict()
+        data['id'] = p.id
+        patient_list.append(data)
+    
+    return jsonify({'patients': patient_list})
+
+# AI Test Endpoint
+@app.route('/api/ai/test', methods=['POST'])
+@mobile_auth_required
+def api_test_ai():
+    try:
+        response = claude_client.messages.create(
+            model="claude-3-sonnet-20240229",
+            max_tokens=100,
+            messages=[{"role": "user", "content": "Say 'AI is working for PhysiologicPRISM!'"}]
+        )
+        return jsonify({'ai_response': response.content[0].text})
+    except Exception as e:
+        return jsonify({'error': f'AI service error: {str(e)}'}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
