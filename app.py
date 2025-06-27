@@ -9,7 +9,7 @@ db = firestore.client()
 from flask_cors import CORS
 import jwt
 from datetime import datetime, timedelta
-#import anthropic
+import anthropic
 
 def log_action(user_id, action, details=None):
     db.collection('audit_logs').add({
@@ -22,8 +22,7 @@ def log_action(user_id, action, details=None):
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'fallback_default')
 CORS(app)  # Enable CORS for mobile app
-# claude_client = anthropic.Anthropic(api_key=os.environ.get('CLAUDE_API_KEY'))
-claude_client = None  # Temporarily disabled for deployment
+claude_client = anthropic.Anthropic(api_key=os.environ.get('CLAUDE_API_KEY'))
 
 
 def login_required(approved_only=True):
@@ -1258,5 +1257,33 @@ def api_get_clinical_form(form_type, patient_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/ai/clinical-assistant', methods=['POST'])
+@mobile_auth_required
+def ai_clinical_assistant():
+    try:
+        data = request.get_json()
+        prompt = data.get('prompt')
+        context = data.get('context', {})
+        
+        # Build comprehensive prompt for Claude
+        system_prompt = f"""You are an expert physiotherapy clinical assistant. 
+        Patient context: {context}
+        Provide professional, evidence-based responses for: {prompt}
+        Keep responses concise and clinically relevant."""
+        
+        response = claude_client.messages.create(
+            model="claude-3-sonnet-20240229",
+            max_tokens=500,
+            messages=[{"role": "user", "content": system_prompt}]
+        )
+        
+        return jsonify({
+            'success': True, 
+            'ai_response': response.content[0].text
+        })
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
 if __name__ == '__main__':
     app.run(debug=True)
