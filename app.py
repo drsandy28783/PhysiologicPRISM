@@ -1137,7 +1137,7 @@ def api_test_ai():
             return jsonify({'ai_response': 'AI temporarily disabled - will enable after successful deployment'})
         
         response = claude_client.messages.create(
-            model="claude-3-sonnet-20240229",
+            model="claude-3-5-sonnet-20241022",
             max_tokens=100,
             messages=[{"role": "user", "content": "Say 'AI is working for PhysiologicPRISM!'"}]
         )
@@ -1273,7 +1273,7 @@ def ai_clinical_assistant():
         Keep responses concise and clinically relevant."""
         
         response = claude_client.messages.create(
-            model="claude-3-sonnet-20240229",
+            model="claude-3-5-sonnet-20241022",
             max_tokens=500,
             messages=[{"role": "user", "content": system_prompt}]
         )
@@ -1294,7 +1294,7 @@ def test_ai_simple():
             return jsonify({'error': 'Claude client not initialized'})
         
         response = claude_client.messages.create(
-            model="claude-3-sonnet-20240229",
+            model="claude-3-5-sonnet-20241022",
             max_tokens=50,
             messages=[{"role": "user", "content": "Say hello"}]
         )
