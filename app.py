@@ -1145,6 +1145,118 @@ def api_test_ai():
         return jsonify({'ai_response': response.content[0].text})
     except Exception as e:
         return jsonify({'error': f'AI service error: {str(e)}'}), 500
+    
+    # Add Patient API
+@app.route('/api/patients', methods=['POST'])
+@mobile_auth_required
+def api_add_patient():
+    try:
+        data = request.get_json()
+        
+        # Generate patient ID (same logic as web app)
+        patients = db.collection('patients').stream()
+        max_id = 0
+        for p in patients:
+            pid = p.to_dict().get('patient_id', '')
+            if pid.startswith('PAT-'):
+                try:
+                    num = int(pid.split('-')[1])
+                    max_id = max(max_id, num)
+                except:
+                    pass
+        
+        new_id = f"PAT-{max_id + 1:03d}"
+        
+        patient_data = {
+            'physio_id': request.user_id,
+            'patient_id': new_id,
+            'name': data.get('name', ''),
+            'age_sex': data.get('age_sex', ''),
+            'contact': data.get('contact', ''),
+            'present_history': data.get('present_history', ''),
+            'past_history': data.get('past_history', '')
+        }
+        
+        db.collection('patients').add(patient_data)
+        
+        log_action(request.user_id, "Add Patient (Mobile)", f"Added patient {data.get('name')} (ID: {new_id})")
+        
+        return jsonify({'success': True, 'patient_id': new_id, 'message': 'Patient added successfully'})
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Clinical Forms API - Generic endpoint for all 12 stages
+@app.route('/api/clinical-form/<form_type>/<patient_id>', methods=['POST'])
+@mobile_auth_required
+def api_save_clinical_form(form_type, patient_id):
+    try:
+        data = request.get_json()
+        data['patient_id'] = patient_id
+        
+        # Map form types to collections (same as your web app)
+        collection_map = {
+            'subjective': 'subjective_examination',
+            'perspectives': 'patient_perspectives', 
+            'initial_plan': 'initial_plan',
+            'patho_mechanism': 'patho_mechanism',
+            'chronic_disease': 'chronic_diseases',
+            'clinical_flags': 'clinical_flags',
+            'objective': 'objective_assessment',
+            'diagnosis': 'provisional_diagnosis',
+            'goals': 'smart_goals',
+            'treatment': 'treatment_plan',
+            'follow_up': 'follow_ups'
+        }
+        
+        collection_name = collection_map.get(form_type)
+        if not collection_name:
+            return jsonify({'error': 'Invalid form type'}), 400
+        
+        # Save to Firebase
+        db.collection(collection_name).add(data)
+        
+        log_action(request.user_id, f"Save {form_type} (Mobile)", f"Saved {form_type} for patient {patient_id}")
+        
+        return jsonify({'success': True, 'message': f'{form_type} saved successfully'})
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Get Clinical Form Data
+@app.route('/api/clinical-form/<form_type>/<patient_id>', methods=['GET'])
+@mobile_auth_required
+def api_get_clinical_form(form_type, patient_id):
+    try:
+        collection_map = {
+            'subjective': 'subjective_examination',
+            'perspectives': 'patient_perspectives',
+            'initial_plan': 'initial_plan',
+            'patho_mechanism': 'patho_mechanism',
+            'chronic_disease': 'chronic_diseases',
+            'clinical_flags': 'clinical_flags',
+            'objective': 'objective_assessment',
+            'diagnosis': 'provisional_diagnosis',
+            'goals': 'smart_goals',
+            'treatment': 'treatment_plan',
+            'follow_up': 'follow_ups'
+        }
+        
+        collection_name = collection_map.get(form_type)
+        if not collection_name:
+            return jsonify({'error': 'Invalid form type'}), 400
+        
+        # Get form data from Firebase
+        docs = db.collection(collection_name).where('patient_id', '==', patient_id).stream()
+        form_data = None
+        for doc in docs:
+            form_data = doc.to_dict()
+            break
+        
+        return jsonify({'success': True, 'data': form_data})
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
