@@ -2421,6 +2421,259 @@ def api_pathomechanism_templates():
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+
+    # Add these endpoints to your app.py file after your existing AI endpoints
+
+# Chronic Disease Factors AI Guidance
+@app.route('/api/ai/chronic-disease-guidance', methods=['POST'])
+@mobile_auth_required
+def api_chronic_disease_guidance():
+    try:
+        data = request.get_json()
+        cause_category = data.get('cause_category', 'general')  # Physical/Biomechanical, Psychological, etc.
+        
+        # Define chronic disease guidance prompts
+        chronic_disease_prompts = {
+            'general': """Provide expert physiotherapy guidance for assessing Chronic Disease Factors.
+            
+            Comprehensive assessment approach:
+            - Identify contributing factors to symptom maintenance
+            - Assess biopsychosocial influences on chronicity
+            - Evaluate perpetuating factors vs initial causes
+            - Consider multi-factorial nature of chronic conditions
+            
+            Format as structured assessment guidance with key considerations.""",
+            
+            'physical_biomechanical': """Provide expert guidance for Physical/Biomechanical factors in chronic disease maintenance.
+            
+            Physical perpetuating factors:
+            - Biomechanical dysfunction and compensatory patterns
+            - Postural abnormalities and movement dysfunction
+            - Muscle imbalances and strength deficits
+            - Joint restrictions and mobility limitations
+            - Tissue changes and adaptive shortening
+            
+            Format as assessment and intervention considerations.""",
+            
+            'psychological': """Provide expert guidance for Psychological factors in chronic disease maintenance.
+            
+            Psychological perpetuating factors:
+            - Fear-avoidance behaviors and kinesiophobia
+            - Catastrophic thinking and negative beliefs
+            - Depression, anxiety, and mood disorders
+            - Poor coping strategies and helplessness
+            - Hypervigilance and central sensitization
+            
+            Format as assessment and management considerations.""",
+            
+            'social_environmental': """Provide expert guidance for Social/Environmental factors in chronic disease maintenance.
+            
+            Social and environmental perpetuating factors:
+            - Family dynamics and social support systems
+            - Work environment and occupational demands
+            - Cultural beliefs and healthcare experiences
+            - Socioeconomic factors and access to care
+            - Environmental barriers and facilitators
+            
+            Format as assessment and intervention considerations.""",
+            
+            'lifestyle_behavioral': """Provide expert guidance for Lifestyle/Behavioral factors in chronic disease maintenance.
+            
+            Lifestyle perpetuating factors:
+            - Sleep disturbances and poor sleep hygiene
+            - Physical inactivity and deconditioning
+            - Poor nutrition and dietary habits
+            - Substance use and smoking
+            - Stress management and relaxation skills
+            
+            Format as assessment and modification strategies.""",
+            
+            'work_related': """Provide expert guidance for Work-related factors in chronic disease maintenance.
+            
+            Occupational perpetuating factors:
+            - Repetitive strain and overuse patterns
+            - Ergonomic problems and workplace design
+            - Work demands and job satisfaction
+            - Return-to-work barriers and accommodations
+            - Compensation and litigation issues
+            
+            Format as workplace assessment and intervention guidance.""",
+            
+            'others': """Provide expert guidance for Other factors in chronic disease maintenance.
+            
+            Additional perpetuating factors:
+            - Comorbid medical conditions
+            - Medication effects and side effects
+            - Healthcare system factors
+            - Cultural and spiritual considerations
+            - Genetic and hereditary influences
+            
+            Format as comprehensive assessment considerations."""
+        }
+        
+        prompt = chronic_disease_prompts.get(cause_category.lower().replace('/', '_').replace(' ', '_'), 
+                                           chronic_disease_prompts['general'])
+        
+        response = claude_client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=400,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({
+            'success': True,
+            'guidance': response.content[0].text,
+            'cause_category': cause_category
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Biopsychosocial Assessment Assistant
+@app.route('/api/ai/biopsychosocial-assessment', methods=['POST'])
+@mobile_auth_required
+def api_biopsychosocial_assessment():
+    try:
+        data = request.get_json()
+        selected_cause = data.get('selected_cause', '')
+        cause_details = data.get('cause_details', '')
+        
+        prompt = f"""Provide biopsychosocial assessment guidance for chronic disease factors in physiotherapy.
+
+        Selected cause category: {selected_cause}
+        Current details: {cause_details[:200] if cause_details else 'Not specified'}
+        
+        Provide comprehensive guidance on:
+        1. Biopsychosocial model application
+        2. Assessment strategies for this cause category
+        3. Intervention planning considerations
+        4. Patient education approaches
+        5. Interdisciplinary collaboration needs
+        
+        Format as structured clinical guidance."""
+        
+        response = claude_client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=500,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({
+            'success': True,
+            'assessment': response.content[0].text
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Chronic Disease Education
+@app.route('/api/ai/chronic-disease-education', methods=['POST'])
+@mobile_auth_required
+def api_chronic_disease_education():
+    try:
+        prompt = """Provide evidence-based education on chronic disease factors for physiotherapists.
+        
+        Educational content should cover:
+        1. Transition from acute to chronic conditions
+        2. Biopsychosocial model in chronic disease
+        3. Central sensitization and neuroplasticity
+        4. Role of perpetuating factors vs initial causes
+        5. Evidence-based chronic disease management
+        6. Patient education and self-management strategies
+        
+        Format as comprehensive educational resource for clinical practice."""
+        
+        response = claude_client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=600,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({
+            'success': True,
+            'education': response.content[0].text
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Clinical Reasoning Prompts for Chronic Disease
+@app.route('/api/ai/chronic-disease-prompts', methods=['POST'])
+@mobile_auth_required
+def api_chronic_disease_prompts():
+    try:
+        data = request.get_json()
+        cause_category = data.get('cause_category', '')
+        
+        prompt = f"""Provide clinical reasoning prompts for chronic disease factor assessment in physiotherapy.
+
+        Focus area: {cause_category if cause_category else 'comprehensive chronic disease assessment'}
+        
+        Provide 5-6 clinical reasoning questions focusing on:
+        1. Identification of perpetuating factors
+        2. Biopsychosocial assessment strategies
+        3. Patient perspective and understanding
+        4. Intervention planning considerations
+        5. Outcome measurement approaches
+        
+        Format as numbered clinical reasoning questions with brief rationale."""
+        
+        response = claude_client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=400,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({
+            'success': True,
+            'prompts': response.content[0].text
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Intervention Planning Assistant
+@app.route('/api/ai/chronic-intervention-planning', methods=['POST'])
+@mobile_auth_required
+def api_chronic_intervention_planning():
+    try:
+        data = request.get_json()
+        cause_category = data.get('cause_category', '')
+        cause_details = data.get('cause_details', '')
+        
+        prompt = f"""Provide intervention planning guidance for chronic disease management in physiotherapy.
+
+        Identified cause category: {cause_category}
+        Assessment details: {cause_details[:200] if cause_details else 'Not specified'}
+        
+        Provide intervention planning guidance:
+        1. Evidence-based treatment approaches
+        2. Multidisciplinary collaboration needs
+        3. Patient education strategies
+        4. Self-management program development
+        5. Outcome measurement tools
+        6. Long-term management considerations
+        
+        Format as structured intervention planning guidance."""
+        
+        response = claude_client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=500,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return jsonify({
+            'success': True,
+            'planning': response.content[0].text
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
