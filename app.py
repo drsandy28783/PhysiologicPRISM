@@ -22,7 +22,7 @@ def log_action(user_id, action, details=None):
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'fallback_default')
 CORS(app)  # Enable CORS for mobile app
-c# claude_client = anthropic.Anthropic(api_key=os.environ.get('CLAUDE_API_KEY'))
+# claude_client = anthropic.Anthropic(api_key=os.environ.get('CLAUDE_API_KEY'))
 claude_client = None  # Temporarily disabled for deployment
 
 
