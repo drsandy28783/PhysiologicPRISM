@@ -60,6 +60,11 @@
 
         <br>
         <a href="/dashboard"><button class="button back-button">← Back to Dashboard</button></a>
+        <form method="POST" action="/view_ai_summary" style="margin-top: 5px;">
+    <input type="hidden" name="patient_id" value="{{ patient[0] }}">
+    <button class="btn btn-secondary" type="submit">📄 View AI Summary</button>
+</form>
+
     </div>
 </body>
 </html>

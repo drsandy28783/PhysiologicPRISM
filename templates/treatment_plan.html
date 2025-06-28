@@ -7,22 +7,45 @@
 <body>
     <div class="container">
         <h2>Treatment Plan for {{ patient_id }}</h2>
+
         <form method="POST">
+            <label>Treatment Plan:</label>
+            <textarea name="treatment_plan" class="input-field" rows="2">{{ data.get('treatment_plan', '') }}</textarea><br>
 
-            <label for="treatment_plan">Treatment Plan:</label>
-            <textarea name="treatment_plan" id="treatment_plan" class="input-field" rows="2" required></textarea>
+            <label>Goal Targeted:</label>
+            <textarea name="goal_targeted" class="input-field" rows="2">{{ data.get('goal_targeted', '') }}</textarea><br>
 
-            <label for="goal_targeted">Goal Targeted:</label>
-            <textarea name="goal_targeted" id="goal_targeted" class="input-field" rows="2" required></textarea>
+            <label>Reasoning:</label>
+            <textarea name="reasoning" class="input-field" rows="2">{{ data.get('reasoning', '') }}</textarea><br>
 
-            <label for="reasoning">Reasoning:</label>
-            <textarea name="reasoning" id="reasoning" class="input-field" rows="2" required></textarea>
+            <label>Article / Book / Literature / Reference:</label>
+            <textarea name="reference" class="input-field" rows="2">{{ data.get('reference', '') }}</textarea><br>
 
-            <label for="reference">Article / Book / Literature / Reference:</label>
-            <textarea name="reference" id="reference" class="input-field" rows="2" required></textarea>
+            <button type="submit" class="button">Save & Return to Dashboard</button>
+            <button type="button" class="btn btn-secondary" onclick="getAITreatmentPlan()">🧠 Get AI Suggestion</button>
 
-            <button class="button" type="submit">Save & Return to Dashboard</button>
+            <div id="ai-treatment-response" style="margin-top:10px; white-space:pre-wrap;"></div>
         </form>
     </div>
+
+    <script>
+    async function getAITreatmentPlan() {
+        const patientId = "{{ patient_id }}";
+
+        try {
+            const response = await fetch("/api/ai/treatment_plan", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ patient_id: patientId })
+            });
+
+            const data = await response.json();
+            document.getElementById("ai-treatment-response").innerText = data.response;
+        } catch (err) {
+            console.error("AI request failed", err);
+            alert("Could not fetch AI suggestions");
+        }
+    }
+    </script>
 </body>
 </html>

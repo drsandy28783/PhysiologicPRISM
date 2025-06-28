@@ -31,7 +31,34 @@
             </select>
 
             <button class="button" type="submit">Save & Continue</button>
+
+            <!-- AI Suggestion Button -->
+            <button type="button" class="btn btn-secondary" onclick="getProvisionalAISuggestion()">💡 Get AI Suggestion</button>
+
+            <!-- AI Response Output -->
+            <div id="ai-provisional-response" style="margin-top:10px; white-space:pre-wrap;"></div>
         </form>
     </div>
+
+    <!-- AI Suggestion Script -->
+    <script>
+      async function getProvisionalAISuggestion() {
+        const patientId = "{{ patient_id }}";
+
+        try {
+          const response = await fetch("/api/ai/provisional_diagnosis", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ patient_id: patientId })
+          });
+
+          const data = await response.json();
+          document.getElementById("ai-provisional-response").innerText = data.response;
+        } catch (err) {
+          console.error("AI request failed", err);
+          alert("Could not fetch AI suggestions");
+        }
+      }
+    </script>
 </body>
 </html>

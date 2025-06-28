@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Summary</title>
+  <style>
+    body {
+      font-family: Arial;
+      margin: 40px;
+    }
+    .summary-box {
+      white-space: pre-wrap;
+      background: #f2f2f2;
+      border-left: 4px solid #4CAF50;
+      padding: 20px;
+      margin-bottom: 30px;
+    }
+    .button-container {
+      display: flex;
+      gap: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h2>AI-Generated Summary for {{ patient_id }}</h2>
+  <div class="summary-box">{{ summary }}</div>
+
+  <div class="button-container">
+    <!-- Download PDF -->
+    <form method="POST" action="/download_ai_summary">
+      <input type="hidden" name="patient_id" value="{{ patient_id }}">
+      <button type="submit">Download PDF</button>
+    </form>
+
+    <!-- Regenerate Summary -->
+   <form method="POST" action="/view_ai_summary">
+  <input type="hidden" name="patient_id" value="{{ patient_id }}">
+  <input type="hidden" name="regenerate" value="true">
+  <button type="submit">Regenerate Summary</button>
+</form>
+
+
+    <!-- Back to Patients -->
+    <form action="/view_patients">
+      <button type="submit">← Back to Patient List</button>
+
+    {% if debug %}
+  <hr>
+  <h3>🧪 Debug Info</h3>
+  <h4>Claude Prompt:</h4>
+  <pre>{{ prompt }}</pre>
+  <h4>Claude Output:</h4>
+  <pre>{{ summary }}</pre>
+{% endif %}
+
+    </form>
+  </div>
+</body>
+</html>

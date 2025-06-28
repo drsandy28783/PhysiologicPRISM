@@ -22,7 +22,30 @@
             <textarea name="time_duration" id="time_duration" class="input-field" rows="2" required></textarea>
 
             <button class="button" type="submit">Save & Continue to Treatment Plan</button>
+            <button type="button" class="btn btn-secondary" onclick="getAISmartGoals()">💡 Get AI Suggestion</button>
+
+            <div id="ai-smart-response" style="margin-top:10px; white-space:pre-wrap;"></div>
         </form>
     </div>
+
+    <script>
+    async function getAISmartGoals() {
+        const patientId = "{{ patient_id }}";
+
+        try {
+            const response = await fetch("/api/ai/smart_goals", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ patient_id: patientId })
+            });
+
+            const data = await response.json();
+            document.getElementById("ai-smart-response").innerText = data.response;
+        } catch (err) {
+            console.error("AI request failed", err);
+            alert("Could not fetch AI suggestions");
+        }
+    }
+    </script>
 </body>
 </html>

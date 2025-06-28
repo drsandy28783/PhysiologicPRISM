@@ -6,6 +6,13 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from firebase_init import firebase_admin  # uses your existing setup
 from firebase_admin import firestore
 db = firestore.client()
+import anthropic
+DEBUG_AI = True  # Set to False in production
+
+
+client = anthropic.Anthropic(
+    api_key=os.getenv("CLAUDE_API_KEY")
+)
 
 
 def log_action(user_id, action, details=None):
@@ -1031,6 +1038,537 @@ def edit_patient(patient_id):
         return redirect('/view_patients')
 
     return render_template('edit_patient.html', patient=patient)
+
+@app.route("/api/ai/intake-insights", methods=["POST"])
+def ai_intake_insights():
+    data = request.get_json()
+
+    # Clinical fields only – no PII sent to Claude
+    age_sex = data.get("age_sex", "")
+    present_history = data.get("present_history", "")
+    past_history = data.get("past_history", "")
+
+    # Claude-safe clinical reasoning prompt
+    prompt = f"""
+You are a clinical assistant helping a physiotherapist assess a new patient.
+
+Given:
+- Age/Sex: {age_sex}
+- Presenting Symptoms: {present_history}
+- Relevant Past History: {past_history}
+
+Your task is:
+1. Summarize possible key concerns or symptom patterns.
+2. Suggest 3–4 **follow-up questions** the therapist should ask to better understand the problem.
+3. List any **underlying conditions** (like diabetes or thyroid issues) that should be screened for, based on the symptoms.
+
+Do not include or infer any patient names or personal identifiers.
+Keep each section concise in bullet points.
+"""
+
+    ai_response = call_claude(prompt)
+    return jsonify({"response": ai_response})
+
+@app.route("/api/ai/subjective-exam", methods=["POST"])
+def ai_subjective_exam():
+    data = request.get_json()
+    patient_id = data.get("patient_id")
+
+    # 🔍 Pull present & past history from Firestore
+    patient_doc = db.collection("patients").document(patient_id).get()
+    if not patient_doc.exists:
+        return jsonify({"error": "Patient not found"}), 404
+
+    patient_data = patient_doc.to_dict()
+    present_history = patient_data.get("present_history", "")
+    past_history = patient_data.get("past_history", "")
+
+    prompt = f"""
+You are assisting a physiotherapist in completing a clinical subjective examination using ICF framework.
+
+Use the following clinical inputs:
+
+Present History:
+{present_history}
+
+Past History:
+{past_history}
+
+Suggest appropriate entries for the following 6 categories:
+1. Impairment of body structure  
+2. Impairment of body function  
+3. Activity Limitation / Restriction – Performance  
+4. Activity Limitation / Restriction – Capacity  
+5. Contextual Factors – Environmental  
+6. Contextual Factors – Personal  
+
+Your suggestions should be phrased as **single-line clinical statements** for each section.
+Do not include patient identifiers. Focus only on relevant clinical insight.
+"""
+
+    ai_response = call_claude(prompt)
+    return jsonify({"response": ai_response})
+
+@app.route("/api/ai/patient-perspectives", methods=["POST"])
+def ai_patient_perspectives():
+    data = request.get_json()
+    patient_id = data.get("patient_id")
+
+    # 🔍 Pull patient data from Firestore
+    patient_doc = db.collection("patients").document(patient_id).get()
+    if not patient_doc.exists:
+        return jsonify({"error": "Patient not found"}), 404
+
+    patient_data = patient_doc.to_dict()
+    present_history = patient_data.get("present_history", "")
+    past_history = patient_data.get("past_history", "")
+    subjective_exam = patient_data.get("subjective_exam", "")
+
+    prompt = f"""
+You are assisting a physiotherapist in assessing **Patient Perspectives**.
+
+Use this case history:
+Present History: {present_history}
+Past History: {past_history}
+Subjective Examination: {subjective_exam}
+
+Based on the above, provide clinical suggestions for the following:
+1. Knowledge of Illness  
+2. Illness Attribution  
+3. Expectation  
+4. Awareness of Control  
+5. Locus of Control  
+6. Affective Aspect  
+
+Write each section as a clear, one-line clinical interpretation.  
+Use general phrasing (e.g., "Patient believes condition is due to overuse").  
+Avoid any personal identifiers or names.
+"""
+
+    ai_response = call_claude(prompt)
+    return jsonify({"response": ai_response})
+
+@app.route("/api/ai/initial_plan", methods=["POST"])
+def ai_initial_plan():
+    data = request.get_json()
+    patient_id = data.get("patient_id")
+
+    # Pull previous data from Firestore
+    patient_doc = db.collection("patients").document(patient_id).get()
+    if not patient_doc.exists:
+        return jsonify({"error": "Patient not found"}), 404
+
+    patient_data = patient_doc.to_dict()
+    present_history = patient_data.get("present_history", "")
+    past_history = patient_data.get("past_history", "")
+    body_structure = patient_data.get("impairment_body_structure", "")
+    body_function = patient_data.get("impairment_body_function", "")
+    performance = patient_data.get("activity_performance", "")
+    capacity = patient_data.get("activity_capacity", "")
+    context_env = patient_data.get("contextual_environmental", "")
+    context_personal = patient_data.get("contextual_personal", "")
+
+    # Construct prompt
+    prompt = f"""
+    A physiotherapist is determining the appropriate initial assessment plan for a new patient.
+
+    Clinical Information:
+    - Present History: {present_history}
+    - Past History: {past_history}
+    - Impairment of Body Structure: {body_structure}
+    - Impairment of Body Function: {body_function}
+    - Activity Limitation – Performance: {performance}
+    - Activity Limitation – Capacity: {capacity}
+    - Contextual Factors – Environmental: {context_env}
+    - Contextual Factors – Personal: {context_personal}
+
+    Suggest:
+    1. Whether an assessment is Mandatory, Contraindicated, or to be done with Precaution.
+    2. Which movements should be tested (Active, Passive, Resisted).
+    3. Precautions to keep in mind.
+    4. Conditions that may influence assessment or require modification.
+
+    Provide responses as concise **bullet points**. No patient identifiers.
+    """
+
+    ai_response = call_claude(prompt)
+    return jsonify({"response": ai_response})
+
+@app.route("/api/ai/pathophysiological", methods=["POST"])
+def ai_pathophysiological():
+    data = request.get_json()
+    patient_id = data.get("patient_id")
+
+    # 🔄 Fetch data from Firestore
+    patient_doc = db.collection("patients").document(patient_id).get()
+    if not patient_doc.exists:
+        return jsonify({"error": "Patient not found"}), 404
+
+    patient_data = patient_doc.to_dict()
+
+    # 🔁 Get required fields (safe defaults for empty values)
+    area_involved = patient_data.get("area_involved", "")
+    presenting_symptom = patient_data.get("presenting_symptom", "")
+    pain_type = patient_data.get("pain_type", "")
+    pain_nature = patient_data.get("pain_nature", "")
+    pain_severity = patient_data.get("pain_severity", "")
+    pain_irritability = patient_data.get("pain_irritability", "")
+    symptom_source = patient_data.get("symptom_source", "")
+    healing_stage = patient_data.get("healing_stage", "")
+
+    # 🧠 Construct AI Prompt
+    prompt = f"""
+You are a clinical physiotherapist. Based on the given patient presentation, generate a possible pathophysiological mechanism or hypothesis. Include how pain characteristics (type, nature, irritability, severity), tissue healing stage, and symptom source help guide the hypothesis.
+
+Patient Data:
+- Area Involved: {area_involved}
+- Presenting Symptom: {presenting_symptom}
+- Pain Type: {pain_type}
+- Pain Nature: {pain_nature}
+- Pain Severity (VAS): {pain_severity}
+- Pain Irritability: {pain_irritability}
+- Possible Source of Symptoms: {symptom_source}
+- Stage of Tissue Healing: {healing_stage}
+
+Your output should include:
+1. A likely hypothesis for the mechanism (e.g., tendinopathy, nerve entrapment, etc.)
+2. Reasoning for the hypothesis based on symptoms
+3. Any suggestions for further assessment if needed
+"""
+
+    # ✨ Claude AI Call
+    ai_response = call_claude(prompt)
+    return jsonify({"response": ai_response})
+
+@app.route("/api/ai/chronic_disease", methods=["POST"])
+def ai_chronic_disease():
+    data = request.get_json()
+    patient_id = data.get("patient_id")
+
+    # 🔍 Pull from Firestore
+    patient_doc = db.collection("patients").document(patient_id).get()
+    if not patient_doc.exists:
+        return jsonify({"error": "Patient not found"}), 404
+
+    patient_data = patient_doc.to_dict()
+    present_history = patient_data.get("present_history", "")
+    past_history = patient_data.get("past_history", "")
+
+    # 🧠 Prompt for Claude
+    prompt = f"""
+You are assisting a physiotherapist in analyzing chronic contributing factors for a musculoskeletal condition.
+
+Clinical Details:
+Present History: {present_history}
+Past History: {past_history}
+
+Based on this, suggest possible contributors to chronicity from the following categories:
+- Physical/Biomechanical
+- Psychological
+- Social/Environmental
+- Lifestyle/Behavioral
+- Work-related
+- Others
+
+Respond in bullet points with clinical reasoning, without including any identifiable information.
+"""
+
+    ai_response = call_claude(prompt)
+    return jsonify({"response": ai_response})
+
+@app.route("/api/ai/clinical_flags", methods=["POST"])
+def ai_clinical_flags():
+    data = request.get_json()
+    patient_id = data.get("patient_id")
+
+    patient_doc = db.collection("patients").document(patient_id).get()
+    if not patient_doc.exists:
+        return jsonify({"error": "Patient not found"}), 404
+
+    patient_data = patient_doc.to_dict()
+    present_history = patient_data.get("present_history", "")
+    past_history = patient_data.get("past_history", "")
+
+    prompt = f"""
+You are helping a physiotherapist identify psychosocial flags based on patient history.
+
+Clinical Summary:
+Present History: {present_history}
+Past History: {past_history}
+
+Using this context, identify if any of the following flags may be relevant:
+- 🔴 Red Flag (Serious pathology)
+- 🟠 Orange Flag (Psychiatric concerns)
+- 🟡 Yellow Flag (Psychosocial issues)
+- ⚫ Black Flag (Compensation or legal/workplace barriers)
+- 🔵 Blue Flag (Perceptions about workplace/stress)
+
+Provide a brief clinical reasoning under each flag (even if no flag is suspected, say 'None evident').
+Respond in bullet points.
+"""
+
+    ai_response = call_claude(prompt)
+    return jsonify({"response": ai_response})
+
+@app.route('/get_ai_suggestion/objective_assessment/<patient_id>', methods=['POST'])
+def get_ai_objective_assessment_suggestion(patient_id):
+    patient_data = get_patient_data(patient_id)
+    
+    # Use data from previous steps to generate prompt
+    prompt = f"""
+    Based on the following patient data:
+    
+    Subjective Examination: {patient_data.get('subjective_examination')}
+    Initial Plan: {patient_data.get('initial_plan')}
+    Pathophysiological Mechanism: {patient_data.get('patho_mechanism')}
+    
+    Suggest the most appropriate plan for objective assessment (choose from: 
+    - Comprehensive without modification, 
+    - Comprehensive with modifications), and explain any relevant observations or modifications that should be recorded.
+    
+    Provide the output in this format:
+    Plan: <your answer>
+    Notes: <your suggestions>
+    """
+    
+    response = openai.ChatCompletion.create(
+        model="gpt-4",
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=300
+    )
+    
+    output = response.choices[0].message['content']
+    try:
+        plan_line = next(line for line in output.splitlines() if line.startswith("Plan:"))
+        notes_line = next(line for line in output.splitlines() if line.startswith("Notes:"))
+        return jsonify({
+            "plan": plan_line.replace("Plan:", "").strip(),
+            "notes": notes_line.replace("Notes:", "").strip()
+        })
+    except Exception:
+        return jsonify({"error": "Unexpected AI output format."}), 500
+
+@app.route('/get_ai_provisional_diagnosis/<patient_id>')
+def get_ai_provisional_diagnosis(patient_id):
+    doc_ref = db.collection('patients').document(patient_id)
+    patient_data = doc_ref.get().to_dict()
+
+    subjective = patient_data.get('subjective_examination', {})
+    mechanism = patient_data.get('patho_mechanism', {})
+    flags = patient_data.get('clinical_flags', {})
+    objective = patient_data.get('objective_assessment', {})
+
+    ai_prompt = f"""
+You are a physiotherapy AI assistant. Based on the following patient data, suggest a Provisional Diagnosis:
+
+Subjective Examination: {subjective}
+Patho-Physiological Mechanism: {mechanism}
+Clinical Flags: {flags}
+Objective Assessment: {objective}
+
+Return the following:
+- Likelihood of Diagnosis
+- Structure at Fault
+- Symptom
+- Findings Supporting the Diagnosis
+- Findings Rejecting the Diagnosis
+- Hypothesis Supported (Yes/No)
+"""
+
+    response = openai.ChatCompletion.create(
+        model="gpt-4",
+        messages=[{"role": "user", "content": ai_prompt}]
+    )
+
+    return jsonify(response['choices'][0]['message']['content'])
+
+@app.route('/get_ai_smart_goals/<patient_id>')
+def get_ai_smart_goals(patient_id):
+    doc_ref = db.collection('patients').document(patient_id)
+    patient_data = doc_ref.get().to_dict()
+
+    diagnosis = patient_data.get('provisional_diagnosis', {})
+    subjective = patient_data.get('subjective_examination', {})
+    objective = patient_data.get('objective_assessment', {})
+
+    prompt = f"""
+You are a physiotherapy AI assistant. Based on the patient's Provisional Diagnosis, Subjective and Objective data, suggest SMART Goals (Specific, Measurable, Achievable, Relevant, Time-bound).
+
+Provisional Diagnosis: {diagnosis}
+Subjective: {subjective}
+Objective: {objective}
+
+Return the following in plain format:
+- Goals (Patient-Centric)
+- Baseline Status
+- Measurable Outcomes Expected
+- Time Duration
+"""
+
+    response = openai.ChatCompletion.create(
+        model="gpt-4",
+        messages=[{"role": "user", "content": prompt}]
+    )
+
+    return jsonify(response['choices'][0]['message']['content'])
+
+@app.route('/get_ai_treatment_plan/<patient_id>')
+def get_ai_treatment_plan(patient_id):
+    doc_ref = db.collection('patients').document(patient_id)
+    patient_data = doc_ref.get().to_dict()
+
+    diagnosis = patient_data.get('provisional_diagnosis', {})
+    goals = patient_data.get('smart_goals', {})
+    subjective = patient_data.get('subjective_examination', {})
+    objective = patient_data.get('objective_assessment', {})
+
+    prompt = f"""
+You are a physiotherapy AI assistant. Based on the data below, suggest a physiotherapy treatment plan.
+
+Subjective Data: {subjective}
+Objective Data: {objective}
+Provisional Diagnosis: {diagnosis}
+SMART Goals: {goals}
+
+Respond in the following format:
+- Treatment Plan:
+- Goal Targeted:
+- Reasoning:
+- Reference:
+"""
+
+    response = openai.ChatCompletion.create(
+        model="gpt-4",
+        messages=[{"role": "user", "content": prompt}]
+    )
+
+    return jsonify(response['choices'][0]['message']['content'])
+
+@app.route("/api/ai/follow_up", methods=["POST"])
+def ai_follow_up():
+    from flask import request, jsonify
+    from firestore import get_patient_data
+    import os
+    import openai
+
+    patient_id = request.json.get("patient_id")
+    if not patient_id:
+        return jsonify({"response": "Invalid request: missing patient ID"}), 400
+
+    # ⬇️ Fetch relevant previous data to inform follow-up suggestions
+    patient_data = get_patient_data(patient_id)
+    subjective = patient_data.get("subjective_examination", {})
+    treatment_plan = patient_data.get("treatment_plan", {})
+    past_followups = patient_data.get("follow_ups", [])
+
+    # 🧠 Build prompt
+    prompt = f"""A patient has undergone treatment. Based on the following details, suggest:
+- Grade of Achievement
+- Perception of Treatment
+- Feedback
+- Plan for Next Treatment
+
+Subjective Info: {subjective}
+Treatment Plan: {treatment_plan}
+Past Follow-Ups: {past_followups}
+"""
+
+    # ⬇️ Claude or OpenAI call here — pseudocode
+    ai_response = call_claude(prompt)
+
+    return jsonify({"response": ai_response})
+
+@app.route("/view_ai_summary", methods=["POST"])
+def view_ai_summary():
+    from flask import request, render_template
+    patient_id = request.form.get("patient_id")
+    log_action(session.get("user_id", "unknown"), f"Viewed AI summary for patient {patient_id}")
+
+    # Fetch patient data
+    patient_ref = db.collection("patients").document(patient_id)
+    patient_doc = patient_ref.get()
+    patient_data = patient_doc.to_dict() or {}
+
+    # Check if summary already exists and skip Claude call
+    summary = patient_data.get("ai_summary")
+    regenerate = request.form.get("regenerate") == "true"
+
+    if not summary or regenerate:
+        # Build fresh Claude prompt
+        prompt = f"""Generate a clinical summary for physiotherapy follow-up based on:
+- Subjective examination: {patient_data.get('subjective_examination')}
+- Objective assessment: {patient_data.get('objective_assessment')}
+- Diagnosis: {patient_data.get('provisional_diagnosis')}
+- SMART Goals: {patient_data.get('smart_goals')}
+- Treatment Plan: {patient_data.get('treatment_plan')}
+- Follow-Up Logs: {patient_data.get('follow_ups', [])}
+
+Keep it concise and professional, summarizing the patient's current clinical status, goals, and progress.
+"""
+
+        summary = call_claude(prompt)
+
+        # Save summary to Firestore
+        patient_ref.update({
+            "ai_summary": summary,
+            "ai_summary_timestamp": datetime.utcnow().isoformat()
+        })
+    else:
+        prompt = "[Using cached summary]"
+
+    return render_template("ai_summary.html", summary=summary, patient_id=patient_id, prompt=prompt, debug=DEBUG_AI)
+
+ 
+
+
+@app.route("/download_ai_summary", methods=["POST"])
+def download_ai_summary():
+    patient_id = request.form.get("patient_id")
+    summary = request.form.get("summary")
+
+    # HTML content to render as PDF
+    html = render_template_string("""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    padding: 30px;
+                    line-height: 1.5;
+                    color: #333;
+                }
+                h2 {
+                    text-align: center;
+                    color: #0A6847;
+                }
+                .summary {
+                    white-space: pre-wrap;
+                    border: 1px solid #ccc;
+                    padding: 15px;
+                    background-color: #f9f9f9;
+                }
+            </style>
+        </head>
+        <body>
+            <h2>AI-Generated Summary for {{ patient_id }}</h2>
+            <div class="summary">{{ summary }}</div>
+        </body>
+        </html>
+    """, patient_id=patient_id, summary=summary)
+
+    # Generate PDF using WeasyPrint
+    pdf = HTML(string=html).write_pdf()
+
+    # Return PDF as downloadable response
+    response = make_response(pdf)
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = f'attachment; filename=AI_Summary_{patient_id}.pdf'
+    log_action(session.get("user_id", "unknown"), f"Downloaded AI summary for patient {patient_id}")
+
+
+    return response
 
 
 if __name__ == '__main__':

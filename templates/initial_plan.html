@@ -33,6 +33,21 @@
             {% endfor %}
 
             <button class="button" type="submit">Save & Continue to Pathophysiological Mechanism</button>
+            <button id="get-ai-suggestion" type="button">Get AI Suggestion</button>
+<div id="ai-suggestion-output"></div>
+
+<script>
+  document.getElementById('get-ai-suggestion').onclick = async function() {
+    const response = await fetch('/api/ai/initial_plan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ patient_id: "{{ patient_id }}" })
+    });
+    const data = await response.json();
+    document.getElementById('ai-suggestion-output').innerText = data.response;
+  }
+</script>
+
         </form>
     </div>
 </body>

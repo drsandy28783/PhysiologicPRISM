@@ -28,6 +28,32 @@
 
             <button class="button" type="submit">Save & Continue to Patient Perspectives</button>
 
+            <button type="button" class="btn btn-secondary" onclick="getAISuggestions()">Get AI Suggestions</button>
+<div id="ai-response" style="margin-top:10px; white-space:pre-wrap;"></div>
+
+<script>
+  async function getAISuggestions() {
+    const patientId = "{{ patient_id }}";  // make sure this is passed to the template
+
+    try {
+      const response = await fetch("/api/ai/subjective-exam", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ patient_id: patientId }),
+      });
+
+      const data = await response.json();
+      document.getElementById("ai-response").innerText = data.response;
+    } catch (err) {
+      console.error("AI request failed", err);
+      alert("Could not fetch AI suggestions");
+    }
+  }
+</script>
+
+
         </form>
     </div>
 </body>

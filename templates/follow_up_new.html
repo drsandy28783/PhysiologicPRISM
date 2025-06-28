@@ -37,6 +37,30 @@
             <textarea name="treatment_plan" class="input-field" rows="3" placeholder="Describe treatment strategy..."></textarea>
 
             <button type="submit" class="button">Save Follow-Up</button>
+            <button type="button" class="btn btn-secondary" onclick="getAIFollowUp()">💡 Get AI Suggestion</button>
+
+<div id="ai-followup-response" style="margin-top:10px; white-space:pre-wrap;"></div>
+
+<script>
+  async function getAIFollowUp() {
+    const patientId = "{{ patient_id }}";  // Ensure this variable is passed from Flask
+
+    try {
+      const response = await fetch("/api/ai/follow_up", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ patient_id: patientId })
+      });
+
+      const data = await response.json();
+      document.getElementById("ai-followup-response").innerText = data.response;
+    } catch (err) {
+      console.error("AI request failed", err);
+      alert("Could not fetch AI suggestions");
+    }
+  }
+</script>
+
         </form>
     </div>
 </body>

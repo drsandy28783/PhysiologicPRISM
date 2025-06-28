@@ -19,6 +19,32 @@
         <textarea name="plan_details" id="plan_details" class="input-field" rows="3" placeholder="Enter observations or modifications here..."></textarea><br><br>
 
         <button class="button" type="submit">Save & Continue to Provisional Diagnosis</button>
+        <button type="button" onclick="fetchAISuggestion()" class="btn btn-outline-primary mt-3">
+  Get AI Suggestion
+</button>
+
+<script>
+  function fetchAISuggestion() {
+    const patientId = "{{ patient_id }}";
+    fetch(`/get_ai_suggestion/objective_assessment/${patientId}`, {
+      method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.plan) {
+        document.querySelector('select[name="plan"]').value = data.plan;
+      }
+      if (data.notes) {
+        document.querySelector('textarea[name="notes"]').value = data.notes;
+      }
+    })
+    .catch(error => {
+      alert("AI suggestion failed.");
+      console.error(error);
+    });
+  }
+</script>
+
     </form>
 </div>
 </body>

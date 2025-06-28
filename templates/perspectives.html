@@ -79,6 +79,31 @@
 
       <div class="form-group full-width">
         <button class="button" type="submit">Save & Continue to Initial Plan</button>
+  
+      <button type="button" class="btn btn-secondary" onclick="getAIPerspective()">Get AI Suggestions</button>
+<div id="ai-perspective-response" style="margin-top:10px; white-space:pre-wrap;"></div>
+
+<script>
+  async function getAIPerspective() {
+    const patientId = "{{ patient_id }}";
+
+    try {
+      const response = await fetch("/api/ai/patient-perspectives", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ patient_id: patientId })
+      });
+
+      const data = await response.json();
+      document.getElementById("ai-perspective-response").innerText = data.response;
+    } catch (err) {
+      console.error("AI request failed", err);
+      alert("Could not fetch AI suggestions");
+    }
+  }
+</script>
+
+        
       </div>
     </form>
 

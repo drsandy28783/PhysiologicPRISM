@@ -25,6 +25,32 @@
       <textarea class="input-field" name="blue_flag" rows="2" placeholder="Describe if any blue flags present..."></textarea>
 
       <button class="button" type="submit">Save & Continue to Objective Assessment</button>
+      <button id="aiButton" type="button" class="btn btn-secondary mb-3">💡 Get AI Suggestions</button>
+<div id="aiOutput" style="white-space: pre-wrap; margin-top: 10px;"></div>
+
+<script>
+  document.getElementById('aiButton').addEventListener('click', async () => {
+    const patientId = "{{ patient_id }}";
+    const button = document.getElementById('aiButton');
+    const output = document.getElementById('aiOutput');
+    
+    button.disabled = true;
+    button.innerText = "Generating Suggestions...";
+
+    const response = await fetch('/api/ai/clinical_flags', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ patient_id: patientId })
+    });
+
+    const data = await response.json();
+    output.innerText = data.response || "No suggestions available.";
+    
+    button.disabled = false;
+    button.innerText = "💡 Get AI Suggestions";
+  });
+</script>
+
     </form>
   </div>
 </body>
